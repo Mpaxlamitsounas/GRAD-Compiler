@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import Optional
 
 
 class Condition(Enum):
@@ -15,8 +16,9 @@ class OperandType(Enum):
 @dataclass(frozen=True)
 class Operand:
     type: OperandType
+    value_type: OperandType
     name: str = ""
-    value: str = ""
+    value: Optional["Operand"] = None
 
     def __str__(self):
         if self.name == "M":
@@ -26,7 +28,7 @@ class Operand:
             return self.name
 
         else:
-            return self.value
+            return self.name
 
     def __repr__(self):
         return self.__str__()

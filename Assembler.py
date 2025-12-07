@@ -1,15 +1,25 @@
-# from Registers import A, D, M
-# from Types import (
-#     AInstruction,
-#     CInstruction,
-#     Instruction,
-#     InstructionType,
-#     JumpType,
-#     Operation,
-#     Register,
-#     RegisterType,
-# )
+from Parser import parse_operand
+
+# Memory loading: Reg -> C, Con -> A
+# (Reg, Reg)
+# M[1] => A = 1; M
+# M[D] => A = D; M
+# M[M[1]] => A = 1; A = M; M
 #
+# (Reg, Con)
+# M[3] => @3; M
+# M[M[3]] => @3; A = M; M
+#
+#
+# Calc: Reg -> No load, Con -> A
+# (Reg, Con)
+# y + 1 => y + 1
+# (Reg, Con)
+# y + D => y + D
+# (Con, Con)
+# y + 3 => @3; y + A
+
+
 # # TODO
 # def _decompress_A_instruction(inst: AInstruction) -> list[Instruction]:
 #     return[inst]

@@ -2,21 +2,27 @@ import Context
 from Types import Condition, JumpType, Operand, OperandType
 from Types.Instructions import AInstruction, BaseInstruction, CInstruction
 from Types.Operations import Multiplicity, Operation
+from util import strip_all, strip_and_filter_all
 
 
 def parse_operand(operand: str) -> Operand:
-    if operand == "D":
-        return Operand(OperandType.Register, "D")
-    elif operand == "A":
-        return Operand(OperandType.Register, "A")
-    # M
-    elif "[" in operand:
-        operand = operand[2:-1]
-        return Operand(OperandType.Register, "M", operand)
+    if operand == "":
+        raise ValueError
+
+    elif any([operand == "D", operand == "A", operand == "1", operand == "2"]):
+        return Operand(OperandType.Register, OperandType.Constant, operand)
+
+    elif operand.startswith("M[") and operand.endswith("]"):
+        operand = parse_operand(operand[2:-1])
+        return Operand(OperandType.Register, operand.type, "M", operand)
+
     elif operand in Context.symbols:
-        return Operand(OperandType.Constant, value=Context.symbols[operand])
+        return Operand(
+            OperandType.Constant, OperandType.Constant, Context.symbols[operand]
+        )
+
     else:
-        return Operand(OperandType.Constant, value=operand)
+        return Operand(OperandType.Constant, OperandType.Constant, operand)
 
 
 def parse_instructions(file: list[str]) -> list[BaseInstruction]:
@@ -26,7 +32,7 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
     for line in file:
         # A-Instruction
         if "@" in line:
-            instructions.append(AInstruction(line_num, line.strip("@ ")))
+            instructions.append(AInstruction(line_num, line[1:].strip()))
 
         # Alias
         elif ":" in line and ":=" not in line:
@@ -65,10 +71,12 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
                 operation = Operation.NOP
 
             try:
-                operands = [oper.strip() for oper in operation_str.split(operation.symbol) if oper.strip() != ""]
+                operands = strip_and_filter_all(operation_str.split(operation.symbol))
             # empty separator (NOP)
             except ValueError:
-                operands = [operation_str] if operation_str != "" else []
+                operands = (
+                    [operation_str.strip()] if operation_str.strip() != "" else []
+                )
 
             if len(operands) != operation.multiplicity.value:
                 raise ValueError
@@ -79,19 +87,17 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
                 )
 
             if dest is not None:
-                dest = {parse_operand(d.strip()) for d in dest.split(",")}
+                dest = {parse_operand(d) for d in strip_and_filter_all(dest.split(","))}
 
             if jmp is not None:
-                jmp = [j.strip() for j in jmp.split("JMP") if j.strip() != ""]
+                jmp = strip_and_filter_all(jmp.split("JMP"))
                 if len(jmp) == 1:
                     jmp = JumpType(Condition.TRUE, None, jmp[0])
 
                 elif len(jmp) == 2:
                     jmp_dest = jmp[1]
                     try:
-                        jmp_cond, jmp_oper = [
-                            j.strip() for j in jmp[0].split() if j.strip() != ""
-                        ]
+                        jmp_cond, jmp_oper = strip_and_filter_all(jmp[0].split())
                     except:
                         raise ValueError
 
