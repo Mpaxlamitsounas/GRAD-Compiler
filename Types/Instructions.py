@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 from Types import Condition, JumpType, Operand
-from Types.Operations import Operation, OperationType
+from Types.Operations import OperationType
 
 
 class InstructionType(Enum):
@@ -46,7 +46,11 @@ class CInstruction(BaseInstruction):
         self.jmp = jmp
 
     def __str__(self):
-        s = f"{self.dest} := " if len(self.dest) > 0 else ""
+        s = (
+            f"{", ".join([str(d) for d in self.dest])} := "
+            if len(self.dest) > 0
+            else ""
+        )
         s += f"{str(self.op).format(self.x, self.y)}"
         s += (
             f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{" 0" if self.jmp.condition != Condition.TRUE else ""} JMP A"

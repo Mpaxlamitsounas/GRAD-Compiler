@@ -17,18 +17,18 @@ class OperandType(Enum):
 class Operand:
     type: OperandType
     value_type: OperandType
-    name: str = ""
-    value: Optional["Operand"] = None
+    value: str = ""
+    pointer: Optional["Operand"] = None
 
     def __str__(self):
-        if self.name == "M":
-            return f"M[{self.value}]"
+        if self.value == "M":
+            return f"M[{self.pointer}]"
 
         elif self.type == OperandType.Register:
-            return self.name
+            return self.value
 
         else:
-            return self.name
+            return self.value
 
     def __repr__(self):
         return self.__str__()

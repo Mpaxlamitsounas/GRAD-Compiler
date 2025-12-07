@@ -1,8 +1,8 @@
 import Context
 from Types import Condition, JumpType, Operand, OperandType
 from Types.Instructions import AInstruction, BaseInstruction, CInstruction
-from Types.Operations import Multiplicity, Operation
-from util import strip_all, strip_and_filter_all
+from Types.Operations import Operation
+from util import strip_and_filter_all
 
 
 def parse_operand(operand: str) -> Operand:

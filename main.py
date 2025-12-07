@@ -2,7 +2,6 @@
 from pathlib import Path
 from sys import argv
 
-import Assembler
 import Parser
 import Preprocessor
 from Types.Instructions import BaseInstruction

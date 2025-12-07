@@ -1,5 +1,3 @@
-from Parser import parse_operand
-
 # Memory loading: Reg -> C, Con -> A
 # (Reg, Reg)
 # M[1] => A = 1; M
