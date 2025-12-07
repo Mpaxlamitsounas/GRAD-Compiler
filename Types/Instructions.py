@@ -42,7 +42,7 @@ class CInstruction(BaseInstruction):
         self.op = op
         self.dest = dest
         if dest is None:
-            self.dest = set()
+            self.dest: set[Operand] = set()
         self.jmp = jmp
 
     def __str__(self):
@@ -53,7 +53,7 @@ class CInstruction(BaseInstruction):
         )
         s += f"{str(self.op).format(self.x, self.y)}"
         s += (
-            f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{" 0" if self.jmp.condition != Condition.TRUE else ""} JMP A"
+            f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{" 0" if self.jmp.condition != Condition.TRUE else ""} JMP {self.jmp.destination}"
             if self.jmp is not None
             else ""
         )

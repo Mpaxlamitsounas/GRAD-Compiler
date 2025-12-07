@@ -6,7 +6,7 @@ from util import strip_and_filter_all
 
 
 def parse_operand(operand: str) -> Operand:
-    if operand == "":
+    if operand == "" or " " in operand:
         raise ValueError
 
     elif any([operand == "D", operand == "A", operand == "1", operand == "2"]):
