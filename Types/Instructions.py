@@ -17,6 +17,9 @@ class AInstruction(BaseInstruction):
     def __str__(self):
         return f"@{self.value}"
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class CInstruction(BaseInstruction):
     def __init__(
@@ -46,8 +49,11 @@ class CInstruction(BaseInstruction):
         )
         s += f"{str(self.op).format(self.x, self.y)}"
         s += (
-            f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{" 0" if self.jmp.condition != Condition.TRUE else ""} JMP {self.jmp.destination}"
+            f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{f" {self.jmp.compared.value}" if self.jmp.condition != Condition.TRUE else ""} JMP{f" {self.jmp.destination}" if self.jmp.destination is not None else ""}"
             if self.jmp is not None
             else ""
         )
         return s
+
+    def __repr__(self):
+        return self.__str__()

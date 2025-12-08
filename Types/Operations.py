@@ -24,4 +24,5 @@ class OperationType:
 
 class Operation:
     ADD = OperationType("+", Multiplicity.BINARY)
+    SUB = OperationType("-", Multiplicity.BINARY)
     NOP = OperationType("", Multiplicity.UNARY)

@@ -2,27 +2,27 @@ import Context
 from Types import Condition, JumpType, Operand, OperandType
 from Types.Instructions import AInstruction, BaseInstruction, CInstruction
 from Types.Operations import Operation
-from util import strip_and_filter_all
+from util import constant_operand, strip_and_filter_all
 
 
 def parse_operand(operand: str) -> Operand:
     if operand == "" or " " in operand:
         raise ValueError
 
-    elif any([operand == "D", operand == "A", operand == "1", operand == "2"]):
-        return Operand(OperandType.Register, OperandType.Constant, operand)
+    elif any(
+        [operand == "D", operand == "A", operand == "1", operand == "2", operand == "M"]
+    ):
+        return Operand(OperandType.Register, operand)
 
     elif operand.startswith("M[") and operand.endswith("]"):
         operand = parse_operand(operand[2:-1])
-        return Operand(OperandType.Register, operand.type, "M", operand)
+        return Operand(OperandType.Register, "M", operand)
 
     elif operand in Context.symbols:
-        return Operand(
-            OperandType.Constant, OperandType.Constant, Context.symbols[operand]
-        )
+        return Operand(OperandType.Constant, Context.symbols[operand])
 
     else:
-        return Operand(OperandType.Constant, OperandType.Constant, operand)
+        return Operand(OperandType.Constant, operand)
 
 
 def parse_instructions(file: list[str]) -> list[BaseInstruction]:
@@ -39,6 +39,7 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
             split = strip_and_filter_all(line.split(":"))
             if len(split) != 2:
                 raise ValueError
+
             Context.symbols[split[0]] = split[1]
 
         # Jump label
@@ -51,7 +52,7 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
 
         # Variable
         elif line.startswith("VAR "):
-            line = line.replace("VAR", "").strip()
+            line = line.replace("VAR ", "").strip()
             if line == "":
                 raise ValueError
 
@@ -76,6 +77,8 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
             # operand operation operand
             if "+" in operation_str:
                 operation = Operation.ADD
+            elif "-" in operation_str:
+                operation = Operation.SUB
             else:
                 operation = Operation.NOP
 
@@ -100,22 +103,38 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
 
             if jmp is not None:
                 jmp = strip_and_filter_all(jmp.split("JMP"))
-                if len(jmp) == 1:
-                    jmp = JumpType(Condition.TRUE, None, jmp[0])
 
-                elif len(jmp) == 2:
-                    jmp_dest = jmp[1]
-                    try:
-                        jmp_cond, jmp_oper = strip_and_filter_all(jmp[0].split())
-                    except:
+                match len(jmp):
+                    case 0:
+                        jmp = JumpType(Condition.TRUE, constant_operand("0"), None)
+
+                    case 1:
+
+                        jmp = strip_and_filter_all(jmp[0].split())
+                        match len(jmp):
+                            case 1:
+                                jmp = JumpType(
+                                    Condition.TRUE, constant_operand("0"), jmp[0]
+                                )
+
+                            case 2:
+                                jmp = JumpType(
+                                    Condition(jmp[0]), parse_operand(jmp[1]), None
+                                )
+
+                    case 2:
+                        jmp_dest = jmp[1]
+                        try:
+                            jmp_cond, jmp_oper = strip_and_filter_all(jmp[0].split())
+                        except:
+                            raise ValueError
+
+                        jmp = JumpType(
+                            Condition(jmp_cond), parse_operand(jmp_oper), jmp_dest
+                        )
+
+                    case _:
                         raise ValueError
-
-                    jmp = JumpType(
-                        Condition(jmp_cond), parse_operand(jmp_oper), jmp_dest
-                    )
-
-                else:
-                    raise ValueError
 
             instructions.append(CInstruction(line_num, x, y, operation, dest, jmp))
 

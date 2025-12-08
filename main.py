@@ -1,8 +1,10 @@
 #!./bin/python3
+import os
 import random
 from pathlib import Path
 from sys import argv
 
+import Assembler
 import Context
 import Parser
 import Preprocessor
@@ -27,13 +29,15 @@ def main():
 
     # parse
     parsed_instructions: list[BaseInstruction] = Parser.parse_instructions(file)
-    with open(file_path.stem + ".p", "w") as f:
+    with open("Generated/" + file_path.stem + ".p", "wt") as f:
         f.writelines([f"{inst}\n" for inst in parsed_instructions])
 
     # assemble
-    # decompressed_instructions: list[BaseInstruction] = Assembler.decompress_instructions(parsed_instructions)
-    # with open(file_path.stem + ".a", "w") as f:
-    #     f.writelines([str(inst) for inst in decompressed_instructions])
+    decompressed_instructions: list[BaseInstruction] = (
+        Assembler.decompress_instructions(parsed_instructions)
+    )
+    with open("Generated/" + file_path.stem + ".a", "wt") as f:
+        f.writelines([f"{inst}\n" for inst in decompressed_instructions])
 
     # compile
     # compile(file)
@@ -41,5 +45,8 @@ def main():
 
 
 if __name__ == "__main__":
-    argv.append("./fibonacci.txt")
-    main()
+    argv.append("")
+    for file in os.listdir("Test files"):
+        argv[1] = "./Test files/" + "test.txt"
+        main()
+        # sleep(1.5)

@@ -11,16 +11,11 @@ class OperandType(Enum):
 @dataclass(frozen=True)
 class Operand:
     type: OperandType
-    value_type: OperandType
     value: str = ""
     pointer: Optional["Operand"] = None
 
     def __str__(self):
-        if self.value == "M":
-            return f"M[{self.pointer}]"
-
-        else:
-            return self.value
+        return f"M[{self.pointer}]" if self.pointer is not None else self.value
 
     def __repr__(self):
         return self.__str__()
@@ -35,4 +30,4 @@ class Condition(Enum):
 class JumpType:
     condition: Condition
     compared: Operand | None
-    destination: str
+    destination: str | None
