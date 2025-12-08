@@ -1,24 +1,17 @@
 from dataclasses import dataclass
-from enum import Enum, auto
 
 from Types import Condition, JumpType, Operand
 from Types.Operations import OperationType
 
 
-class InstructionType(Enum):
-    A = auto()
-    C = auto()
-
-
 @dataclass
 class BaseInstruction:
     line_num: int
-    inst_type: InstructionType
 
 
 class AInstruction(BaseInstruction):
     def __init__(self, line_num: int, value: str):
-        super().__init__(line_num, InstructionType.A)
+        super().__init__(line_num)
         self.value = value
 
     def __str__(self):
@@ -35,7 +28,7 @@ class CInstruction(BaseInstruction):
         dest: set[Operand] = None,
         jmp: JumpType | None = None,
     ):
-        super().__init__(line_num, InstructionType.C)
+        super().__init__(line_num)
 
         self.x = x
         self.y = y

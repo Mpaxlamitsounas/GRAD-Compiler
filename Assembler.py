@@ -16,31 +16,42 @@
 # y + D => y + D
 # (Con, Con)
 # y + 3 => @3; y + A
+from Types import OperandType
+from Types.Instructions import (
+    AInstruction,
+    BaseInstruction,
+    CInstruction,
+)
+
+cur_A: int | None = None
 
 
-# # TODO
-# def _decompress_A_instruction(inst: AInstruction) -> list[Instruction]:
-#     return[inst]
-#
-# def _check_instruction_validity(inst: CInstruction) -> bool:
-#     if inst.dest is None and inst.jmp is None:
-#         print(f"INFO Skipping instruction with no effect {inst}")
-#         return False
-#
-#     elif Register.ONE in inst.dest or Register.TWO in inst.dest:
-#         print(f"ERROR Can only assign to registers A, M, or D.")
-#         return False
-#
-#     elif len([dest for dest in inst.dest if dest.register == Register.M]) > 1:
-#         print(f"ERROR Can output to at most one memory location at a time.")
-#         return False
-#
-#     elif inst.op == Operation.NOP and inst.y is not None:
-#         print("ERROR Unary operations accept only one operand.")
-#         return False
-#
-#     return True
-#
+# TODO
+def decompress_A_instruction(inst: AInstruction) -> list[BaseInstruction]:
+    return [inst]
+
+
+def _check_instruction_validity(inst: CInstruction) -> bool:
+    if any(
+        [
+            d.type == OperandType.Constant or d.value == "1" or d.value == "2"
+            for d in inst.dest
+        ]
+    ):
+        print(f"ERROR Can only assign to registers A, M, or D.")
+        raise ValueError
+
+    elif len([dest for dest in inst.dest if dest.value == "M"]) > 1:
+        print(f"ERROR Can output to at most one memory location at a time.")
+        return False
+
+    # elif inst.op == Operation.NOP and inst.y is not None:
+    #     print("ERROR Unary operations accept only one operand.")
+    #     return False
+
+    return True
+
+
 # def _decompress_operation_part(cur_A: str | None, inst: CInstruction, instructions: list[Instruction]) -> str | None:
 #     if inst.x.register == Register.M:
 #         if inst.y is not None and inst.y.register == Register.M:
@@ -198,29 +209,39 @@
 #                              CInstruction(inst.line_num, D(), None, Operation.NOP, set(), prev_jmp)]
 #                             )
 #
-# def _decompress_C_instruction(inst: CInstruction):
-#
-#     is_valid = _check_instruction_validity(inst)
-#     if not is_valid:
-#         return []
-#
-#
-#     instructions: list[Instruction] = []
-#     cur_A: str | None = None
-#     params: tuple[CInstruction, list[Instruction]] = (inst, instructions)
-#
-#     cur_A = _decompress_operation_part(cur_A, *params)
-#     cur_A = _decompress_destination_part(cur_A, *params)
-#     if inst.jmp is not None:
-#         cur_A = _decompress_jmp_condition_part(cur_A, *params)
-#         _decompress_jmp_destination_part(cur_A, *params)
-#
-#     return instructions
-#
-#
-# def decompress_instruction(inst: Instruction) -> list[Instruction]:
-#     match inst.inst_type:
-#         case InstructionType.A:
-#             return _decompress_A_instruction(inst)
-#         case InstructionType.C:
-#             return _decompress_C_instruction(inst)
+def decompress_C_instruction(inst: CInstruction):
+    if inst.dest is None and inst.jmp is None:
+        print(f"INFO Skipping instruction with no effect {inst}")
+        return []
+
+    is_valid = _check_instruction_validity(inst)
+    if not is_valid:
+        raise ValueError
+
+    instructions: list[BaseInstruction] = []
+    params: tuple[CInstruction, list[BaseInstruction]] = (inst, instructions)
+
+    _decompress_operation_part(*params)
+    _decompress_destination_part(*params)
+    if inst.jmp is not None:
+        _decompress_jmp_condition_part(*params)
+        _decompress_jmp_destination_part(*params)
+
+    return instructions
+
+
+def decompress_instruction(inst: BaseInstruction) -> list[BaseInstruction]:
+    if isinstance(inst, AInstruction):
+        return decompress_A_instruction(inst)
+    if isinstance(inst, CInstruction):
+        return decompress_C_instruction(inst)
+
+
+def decompress_instructions(
+    instructions: list[BaseInstruction],
+) -> list[BaseInstruction]:
+    decompressed_instructions: list[BaseInstruction] = []
+    for inst in instructions:
+        decompressed_instructions.extend(decompress_instruction(inst))
+
+    return decompressed_instructions

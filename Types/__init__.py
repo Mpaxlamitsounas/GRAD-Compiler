@@ -3,11 +3,6 @@ from enum import Enum, auto
 from typing import Optional
 
 
-class Condition(Enum):
-    GE = ">="
-    TRUE = ""
-
-
 class OperandType(Enum):
     Register = auto()
     Constant = auto()
@@ -24,14 +19,16 @@ class Operand:
         if self.value == "M":
             return f"M[{self.pointer}]"
 
-        elif self.type == OperandType.Register:
-            return self.value
-
         else:
             return self.value
 
     def __repr__(self):
         return self.__str__()
+
+
+class Condition(Enum):
+    GE = ">="
+    TRUE = ""
 
 
 @dataclass

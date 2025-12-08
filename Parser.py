@@ -36,18 +36,27 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
 
         # Alias
         elif ":" in line and ":=" not in line:
-            key, value = line.split(":")
-            if key == "" or value == "":
+            split = strip_and_filter_all(line.split(":"))
+            if len(split) != 2:
                 raise ValueError
-            Context.symbols[key] = value
+            Context.symbols[split[0]] = split[1]
 
-        # # Jump label
-        # elif line.startswith("("):
-        #     name = line[1:-2]
-        #     if len(name) == 0:
-        #         raise ValueError
-        #
-        #     Context.symbols[name] = line_num
+        # Jump label
+        elif line.startswith("("):
+            name = line[1:-2]
+            if len(name) == 0:
+                raise ValueError
+
+            instructions.append(BaseInstruction(line_num))
+
+        # Variable
+        elif line.startswith("VAR "):
+            line = line.replace("VAR", "").strip()
+            if line == "":
+                raise ValueError
+
+            Context.symbols[line] = str(Context.available_RAM[0])
+            del Context.available_RAM[0]
 
         # C-Instruction
         else:
