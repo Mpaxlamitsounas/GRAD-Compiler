@@ -44,12 +44,13 @@ def calc_req_A(op: Operand) -> str:
     except AttributeError:
         raise AttributeError
 
-    return "M[" * loops + cur.value + "]" * loops if loops > 0 else op.value
+    return "M[" * loops + cur.value + "]" * loops if loops > 0 else cur.value
 
 
 def _unravel_index(inst: CInstruction, op: Operand) -> list[BaseInstruction]:
     global cur_A
 
+    prev_A = cur_A
     unraveled_instructions: list[BaseInstruction] = []
 
     cur = op.pointer
@@ -73,7 +74,7 @@ def _unravel_index(inst: CInstruction, op: Operand) -> list[BaseInstruction]:
     if loops > 0:
         cur_A = "M[" * loops + cur.value + "]" * loops
 
-    if cur.value != cur_A:
+    if cur.value != prev_A:
         unraveled_instructions.append(AInstruction(inst.line_num, cur.value))
         cur_A = cur.value if loops == 0 else cur_A
 
@@ -200,11 +201,34 @@ def _decompress_binary_operation(
                     )
                 )
 
-            else:
-                instructions.extend(_unravel_index(inst, inst.y))
+            elif cur_A != calc_req_A(inst.y):
                 instructions.append(
                     CInstruction(
                         inst.line_num, A_register(), None, Operation.NOP, {D_register()}
+                    )
+                )
+
+                instructions.extend(_unravel_index(inst, inst.y))
+                instructions.append(
+                    CInstruction(
+                        inst.line_num,
+                        D_register(),
+                        M_register(None),
+                        inst.op,
+                        inst.dest,
+                        inst.jmp,
+                    )
+                )
+
+            else:
+                instructions.append(
+                    CInstruction(
+                        inst.line_num,
+                        A_register(),
+                        M_register(None),
+                        inst.op,
+                        inst.dest,
+                        inst.jmp,
                     )
                 )
 
@@ -227,7 +251,7 @@ def _decompress_binary_operation(
                     )
                 )
 
-            else:
+            elif cur_A != calc_req_A(inst.x):
                 instructions.append(
                     CInstruction(
                         inst.line_num, A_register(), None, Operation.NOP, {D_register()}
@@ -240,6 +264,18 @@ def _decompress_binary_operation(
                         inst.line_num,
                         M_register(None),
                         D_register(),
+                        inst.op,
+                        inst.dest,
+                        inst.jmp,
+                    )
+                )
+
+            else:
+                instructions.append(
+                    CInstruction(
+                        inst.line_num,
+                        M_register(None),
+                        A_register(),
                         inst.op,
                         inst.dest,
                         inst.jmp,
