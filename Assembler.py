@@ -2,7 +2,7 @@ from Types import Condition, JumpType, Operand, OperandType
 from Types.Instructions import (
     AInstruction,
     BaseInstruction,
-    CInstruction,
+    CInstruction, LabelInstruction,
 )
 from Types.Operations import Operation
 from util import A_register, D_register, M_register, constant_operand
@@ -518,7 +518,7 @@ def _decompress_jmp_destination_part(
     instructions[-1].jmp.destination = None
 
 
-def decompress_C_instruction(inst: CInstruction):
+def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
     if inst.dest is None and inst.jmp is None:
         print(f"INFO Skipping instruction with no effect {inst}")
         return []
@@ -544,6 +544,12 @@ def decompress_instruction(inst: BaseInstruction) -> list[BaseInstruction]:
 
     elif isinstance(inst, CInstruction):
         return decompress_C_instruction(inst)
+
+    elif isinstance(inst, LabelInstruction):
+        return [inst]
+
+    else:
+        return []
 
 
 def decompress_instructions(

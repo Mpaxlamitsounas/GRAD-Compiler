@@ -1,6 +1,6 @@
 import Context
 from Types import Condition, JumpType, Operand, OperandType
-from Types.Instructions import AInstruction, BaseInstruction, CInstruction
+from Types.Instructions import AInstruction, BaseInstruction, CInstruction, LabelInstruction
 from Types.Operations import Operation
 from util import constant_operand, strip_and_filter_all
 
@@ -44,19 +44,19 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
 
         # Jump label
         elif line.startswith("("):
-            name = line[1:-2]
+            name = line[1:-1]
             if len(name) == 0:
                 raise ValueError
 
-            instructions.append(BaseInstruction(line_num))
+            instructions.append(LabelInstruction(line_num, name))
 
         # Variable
         elif line.startswith("VAR "):
-            line = line.replace("VAR ", "").strip()
+            name = line.replace("VAR ", "").strip()
             if line == "":
                 raise ValueError
 
-            Context.symbols[line] = str(Context.available_RAM[0])
+            Context.symbols[name] = str(Context.available_RAM[0])
             del Context.available_RAM[0]
 
         # C-Instruction

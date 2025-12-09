@@ -9,6 +9,17 @@ class BaseInstruction:
     line_num: int
 
 
+class LabelInstruction(BaseInstruction):
+    def __init__(self, line_num: int, value: str):
+        super().__init__(line_num)
+        self.value = value
+
+    def __str__(self):
+        return f"({self.value})"
+
+    def __repr__(self):
+        return self.__str__()
+
 class AInstruction(BaseInstruction):
     def __init__(self, line_num: int, value: str):
         super().__init__(line_num)
