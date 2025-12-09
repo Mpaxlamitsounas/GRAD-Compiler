@@ -68,6 +68,7 @@ def _unravel_index(inst: CInstruction, op: Operand) -> list[BaseInstruction]:
             )
             cur = cur.pointer
             loops += 1
+
     except AttributeError:
         raise AttributeError
 
@@ -540,6 +541,7 @@ def decompress_C_instruction(inst: CInstruction):
 def decompress_instruction(inst: BaseInstruction) -> list[BaseInstruction]:
     if isinstance(inst, AInstruction):
         return decompress_A_instruction(inst)
+
     elif isinstance(inst, CInstruction):
         return decompress_C_instruction(inst)
 

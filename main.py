@@ -45,8 +45,10 @@ def main():
 
 
 if __name__ == "__main__":
-    argv.append("")
-    for file in os.listdir("Test files"):
+    if argv[1] == "all":
+        for file in os.listdir("Test files"):
+            argv[1] = "./Test files/" + file
+            main()
+    elif argv[1] == "test":
         argv[1] = "./Test files/" + "test.txt"
         main()
-        # sleep(1.5)
