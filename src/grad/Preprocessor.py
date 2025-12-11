@@ -1,4 +1,4 @@
-from Context import reserved, symbols
+from grad import Context
 
 
 def remove_comments(line: str) -> str:
@@ -13,10 +13,10 @@ def read_aliases(file: list[str]):
     for line in file:
         if ":" in line:
             key, value = (field.strip() for field in line.split(":"))
-            if key in reserved:
+            if key in Context.reserved:
                 print(f'Alias name "{key}" is reserved.')
                 raise KeyError
-            symbols[key] = value
+            Context.symbols[key] = value
 
 
 def remove_sugar(line: str) -> str:

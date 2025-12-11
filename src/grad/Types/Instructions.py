@@ -1,12 +1,25 @@
+from abc import abstractmethod
 from dataclasses import dataclass
 
-from Types import Condition, JumpType, Operand
-from Types.Operations import OperationType
+from grad.Types import Condition, JumpType, Operand
+from grad.Types.Operations import OperationType
 
 
 @dataclass
 class BaseInstruction:
     line_num: int
+
+    @abstractmethod
+    def copy(self):
+        pass
+
+    @abstractmethod
+    def __repr__(self):
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
 
 
 class LabelInstruction(BaseInstruction):
@@ -14,16 +27,23 @@ class LabelInstruction(BaseInstruction):
         super().__init__(line_num)
         self.value = value
 
+    def copy(self):
+        return LabelInstruction(self.line_num, self.value)
+
     def __str__(self):
         return f"({self.value})"
 
     def __repr__(self):
         return self.__str__()
 
+
 class AInstruction(BaseInstruction):
     def __init__(self, line_num: int, value: str):
         super().__init__(line_num)
         self.value = value
+
+    def copy(self):
+        return AInstruction(self.line_num, self.value)
 
     def __str__(self):
         return f"@{self.value}"
@@ -51,6 +71,11 @@ class CInstruction(BaseInstruction):
         if dest is None:
             self.dest: set[Operand] = set()
         self.jmp = jmp
+
+    def copy(self):
+        return CInstruction(
+            self.line_num, self.x, self.y, self.op, self.dest.copy(), self.jmp.copy()
+        )
 
     def __str__(self):
         s = (

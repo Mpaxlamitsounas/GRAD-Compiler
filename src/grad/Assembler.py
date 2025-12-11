@@ -1,11 +1,12 @@
-from Types import Condition, JumpType, Operand, OperandType
-from Types.Instructions import (
+from grad.Types import Condition, JumpType, Operand, OperandType
+from grad.Types.Instructions import (
     AInstruction,
     BaseInstruction,
-    CInstruction, LabelInstruction,
+    CInstruction,
+    LabelInstruction,
 )
-from Types.Operations import Operation
-from util import A_register, D_register, M_register, constant_operand
+from grad.Types.Operations import Operation
+from grad.util import A_register, D_register, M_register, constant_operand
 
 cur_A: int | None = None
 
@@ -14,7 +15,7 @@ def decompress_A_instruction(inst: AInstruction) -> list[BaseInstruction]:
     global cur_A
 
     cur_A = inst.value
-    return [inst]
+    return [inst.copy()]
 
 
 def _check_instruction_validity(inst: CInstruction) -> bool:
@@ -528,6 +529,7 @@ def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
         raise ValueError
 
     instructions: list[BaseInstruction] = []
+    inst = inst.copy()
 
     _decompress_operation_part(inst, instructions)
     _decompress_destination_part(inst, instructions)
@@ -546,7 +548,7 @@ def decompress_instruction(inst: BaseInstruction) -> list[BaseInstruction]:
         return decompress_C_instruction(inst)
 
     elif isinstance(inst, LabelInstruction):
-        return [inst]
+        return [inst.copy()]
 
     else:
         return []

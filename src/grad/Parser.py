@@ -1,8 +1,13 @@
-import Context
-from Types import Condition, JumpType, Operand, OperandType
-from Types.Instructions import AInstruction, BaseInstruction, CInstruction, LabelInstruction
-from Types.Operations import Operation
-from util import constant_operand, strip_and_filter_all
+from grad import Context
+from grad.Types import Condition, JumpType, Operand, OperandType
+from grad.Types.Instructions import (
+    AInstruction,
+    BaseInstruction,
+    CInstruction,
+    LabelInstruction,
+)
+from grad.Types.Operations import Operation
+from grad.util import constant_operand, strip_and_filter_all
 
 
 def parse_operand(operand: str) -> Operand:

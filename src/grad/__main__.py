@@ -4,11 +4,8 @@ import random
 from pathlib import Path
 from sys import argv
 
-import Assembler
-import Context
-import Parser
-import Preprocessor
-from Types.Instructions import BaseInstruction
+from grad import Assembler, Context, Parser, Preprocessor
+from grad.Types.Instructions import BaseInstruction
 
 
 def main():

@@ -31,3 +31,6 @@ class JumpType:
     condition: Condition
     compared: Operand | None
     destination: str | None
+
+    def copy(self):
+        return JumpType(self.condition, self.compared, self.destination)
