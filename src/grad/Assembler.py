@@ -365,6 +365,7 @@ def _decompress_destination_part(
 
     mem_dests: list[Operand] = [d for d in inst.dest if d.value == "M"]
     mem_dest: Operand = mem_dests[0] if len(mem_dests) != 0 else None
+
     # memory index in dest
     if mem_dest is not None and mem_dest.pointer is not None:
         last_inst: CInstruction = instructions[-1]
@@ -411,6 +412,9 @@ def _decompress_destination_part(
             else:
                 instructions.extend(_unravel_index(inst, mem_dest))
                 instructions.append(last_inst)
+
+    if A_register() in inst.dest:
+        cur_A = None
 
 
 def _decompress_jmp_condition_part(
@@ -504,7 +508,11 @@ def _decompress_jmp_destination_part(
     if inst.jmp.destination != cur_A:
         if inst.jmp.condition != Condition.TRUE:
             prev_inst.dest.add(D_register())
-        prev_inst.jmp = None
+
+        if len(prev_inst.dest) > 0:
+            prev_inst.jmp = None
+        else:
+            del instructions[-1]
 
         instructions.extend(
             [
@@ -528,8 +536,8 @@ def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
     if not is_valid:
         raise ValueError
 
-    instructions: list[BaseInstruction] = []
     inst = inst.copy()
+    instructions: list[BaseInstruction] = []
 
     _decompress_operation_part(inst, instructions)
     _decompress_destination_part(inst, instructions)

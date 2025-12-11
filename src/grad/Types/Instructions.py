@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
 from grad.Types import Condition, JumpType, Operand
@@ -9,17 +9,14 @@ from grad.Types.Operations import OperationType
 class BaseInstruction:
     line_num: int
 
-    @abstractmethod
     def copy(self):
-        pass
+        raise NotImplemented
 
-    @abstractmethod
     def __repr__(self):
-        pass
+        raise NotImplemented
 
-    @abstractmethod
     def __str__(self):
-        pass
+        raise NotImplemented
 
 
 class LabelInstruction(BaseInstruction):
@@ -74,7 +71,12 @@ class CInstruction(BaseInstruction):
 
     def copy(self):
         return CInstruction(
-            self.line_num, self.x, self.y, self.op, self.dest.copy(), self.jmp.copy()
+            self.line_num,
+            self.x,
+            self.y,
+            self.op,
+            self.dest.copy(),
+            None if self.jmp is None else self.jmp.copy(),
         )
 
     def __str__(self):
