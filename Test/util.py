@@ -30,7 +30,7 @@ def get_inst_values(
     return tuple([Parser.parse_operand(v) for v in values])
 
 
-def test_case(value_set: list[str], inst_builder: Callable, filename: Path | str):
+def run_test_case(value_set: list[str], inst_builder: Callable, filename: Path | str):
     cases = make_combination_cases(len(value_set))
 
     results: list[BaseInstruction | str] = []

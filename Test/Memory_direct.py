@@ -3,12 +3,12 @@ from grad.Types.Instructions import CInstruction
 from grad.Types.Operations import Operation
 from grad.util import D_register, ONE_register
 from Test.util import (
-    test_case,
+    run_test_case,
 )
 
 
 def run_test_cases():
-    test_case(
+    run_test_case(
         ["M[0]", "M[1]", "M[2]", "M[3]"],
         lambda v: CInstruction(
             0,
@@ -21,7 +21,7 @@ def run_test_cases():
         "test_memory_direct_only_memory.txt",
     )
 
-    test_case(
+    run_test_case(
         ["M[0]", "M[1]", "M[2]"],
         lambda v: CInstruction(
             0,
@@ -34,7 +34,7 @@ def run_test_cases():
         "test_memory_direct_with_register.txt",
     )
 
-    test_case(
+    run_test_case(
         ["M[0]", "M[1]", "M[2]"],
         lambda v: CInstruction(
             0,
@@ -47,7 +47,7 @@ def run_test_cases():
         "test_memory_direct_register_dest.txt",
     )
 
-    test_case(
+    run_test_case(
         ["M[0]", "M[1]", "M[2]"],
         lambda v: CInstruction(
             0,
