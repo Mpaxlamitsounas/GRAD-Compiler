@@ -7,7 +7,6 @@ from Test.util import (
 )
 
 
-# {MM0, MM1, MM2, MM3} := {MM0, MM1, MM2, MM3} + {D, 2, -, MM0, MM1, MM2, MM3}; IF >= {D, 1, -, MM0, MM1, MM2, MM3} JMP {0}
 def run_test_cases():
     test_case(
         ["M[M[0]]", "M[M[1]]", "M[M[2]]", "M[M[3]]"],
