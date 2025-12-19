@@ -1,4 +1,3 @@
-from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
 from grad.Types import Condition, JumpType, Operand
@@ -87,7 +86,7 @@ class CInstruction(BaseInstruction):
         )
         s += f"{str(self.op).format(self.x, self.y)}"
         s += (
-            f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{f" {self.jmp.compared.value}" if self.jmp.condition != Condition.TRUE else ""} JMP{f" {self.jmp.destination}" if self.jmp.destination is not None else ""}"
+            f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{f" {self.jmp.compared}" if self.jmp.condition != Condition.TRUE else ""} JMP{f" {self.jmp.destination}" if self.jmp.destination is not None else ""}"
             if self.jmp is not None
             else ""
         )

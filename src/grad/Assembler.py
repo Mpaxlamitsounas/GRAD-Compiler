@@ -505,7 +505,7 @@ def _decompress_jmp_destination_part(
     prev_inst: CInstruction = instructions[-1]
     prev_jmp = prev_inst.jmp
 
-    if inst.jmp.destination != cur_A:
+    if inst.jmp.destination != cur_A and inst.jmp.destination is not None:
         if inst.jmp.condition != Condition.TRUE:
             prev_inst.dest.add(D_register())
 
@@ -570,3 +570,39 @@ def decompress_instructions(
         decompressed_instructions.extend(decompress_instruction(inst))
 
     return decompressed_instructions
+
+
+def _optimise_C_inst_dest_combination(
+    instructions: list[BaseInstruction],
+) -> list[BaseInstruction]:
+    if len(instructions) < 2:
+        return instructions
+
+    optim_instructions: list[BaseInstruction] = [instructions[0]]
+    prev_inst = instructions[0]
+    for cur_inst in instructions[1:]:
+        if (
+            isinstance(prev_inst, CInstruction)
+            and isinstance(cur_inst, CInstruction)
+            and all(
+                [
+                    prev_inst.x == cur_inst.x,
+                    prev_inst.y == cur_inst.y,
+                    prev_inst.op == cur_inst.op,
+                    prev_inst.jmp == cur_inst.jmp,
+                ]
+            )
+        ):
+            prev_inst.dest = prev_inst.dest | cur_inst.dest
+            continue
+
+        optim_instructions.append(cur_inst)
+        prev_inst = cur_inst
+
+    return optim_instructions
+
+
+def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
+    instructions = _optimise_C_inst_dest_combination(instructions)
+
+    return instructions

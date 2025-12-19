@@ -110,11 +110,11 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
                 jmp = strip_and_filter_all(jmp.split("JMP"))
 
                 match len(jmp):
+                    # compatibility case (already parsed)
                     case 0:
                         jmp = JumpType(Condition.TRUE, constant_operand("0"), None)
 
                     case 1:
-
                         jmp = strip_and_filter_all(jmp[0].split())
                         match len(jmp):
                             case 1:

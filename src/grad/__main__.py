@@ -5,7 +5,6 @@ from pathlib import Path
 from sys import argv
 
 from grad import Assembler, Context, Parser, Preprocessor
-from grad.Types.Instructions import BaseInstruction
 
 
 def main():
@@ -25,16 +24,15 @@ def main():
     file = Preprocessor.process(file)
 
     # parse
-    parsed_instructions: list[BaseInstruction] = Parser.parse_instructions(file)
+    parsed_instructions = Parser.parse_instructions(file)
     with open("Generated/" + file_path.stem + ".p", "wt") as f:
         f.writelines([f"{inst}\n" for inst in parsed_instructions])
 
     # assemble
-    decompressed_instructions: list[BaseInstruction] = (
-        Assembler.decompress_instructions(parsed_instructions)
-    )
+    decompressed_instructions = Assembler.decompress_instructions(parsed_instructions)
+    optimised_instructions = Assembler.apply_optimisations(decompressed_instructions)
     with open("Generated/" + file_path.stem + ".a", "wt") as f:
-        f.writelines([f"{inst}\n" for inst in decompressed_instructions])
+        f.writelines([f"{inst}\n" for inst in optimised_instructions])
 
     # compile
     # compile(file)
