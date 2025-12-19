@@ -64,6 +64,6 @@ def run_test_cases():
     results: list[BaseInstruction | str] = []
     for inst in get_test_cases():
         Assembler.cur_A = None
-        results.extend([inst, *Assembler.run_full_pipeline([inst]), ""])
+        results.extend([inst, "---", *Assembler.run_full_pipeline([inst]), ""])
 
     write_lines_to_file("test_handmade.txt", results)

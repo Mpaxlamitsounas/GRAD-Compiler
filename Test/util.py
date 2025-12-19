@@ -38,6 +38,15 @@ def run_test_case(value_set: list[str], inst_builder: Callable, filename: Path |
         Assembler.cur_A = None
         values = get_inst_values(value_set.copy(), case)
         inst = inst_builder(values)
-        results.extend([inst, *Assembler.run_full_pipeline([inst]), ""])
+        results.extend([inst, "---", *Assembler.run_full_pipeline([inst]), ""])
+
+    write_lines_to_file(filename, results)
+
+
+def run_test_case_sequence(instructions: list[BaseInstruction], filename: Path | str):
+    results: list[BaseInstruction | str] = instructions
+    results.append("---")
+    results.extend(Assembler.run_full_pipeline(instructions))
+    results.append("")
 
     write_lines_to_file(filename, results)

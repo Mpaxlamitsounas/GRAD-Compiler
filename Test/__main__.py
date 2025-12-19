@@ -3,6 +3,7 @@ import Handmade
 import Memory_direct
 import Memory_indirect
 import Mixed
+import Sequences
 
 
 def run_test():
@@ -11,6 +12,7 @@ def run_test():
     Memory_indirect.run_test_cases()
     Mixed.run_test_cases()
     Handmade.run_test_cases()
+    Sequences.run_test_cases()
 
 
 if __name__ == "__main__":
