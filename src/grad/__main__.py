@@ -29,10 +29,9 @@ def main():
         f.writelines([f"{inst}\n" for inst in parsed_instructions])
 
     # assemble
-    decompressed_instructions = Assembler.decompress_instructions(parsed_instructions)
-    optimised_instructions = Assembler.apply_optimisations(decompressed_instructions)
+    assembled_instructions = Assembler.run_full_pipeline(parsed_instructions)
     with open("Generated/" + file_path.stem + ".a", "wt") as f:
-        f.writelines([f"{inst}\n" for inst in optimised_instructions])
+        f.writelines([f"{inst}\n" for inst in assembled_instructions])
 
     # compile
     # compile(file)

@@ -602,7 +602,50 @@ def _optimise_C_inst_dest_combination(
     return optim_instructions
 
 
+def _optimise_C_inst_redundant_A_assign_make_inline(
+    instructions: list[BaseInstruction],
+) -> list[BaseInstruction]:
+    if len(instructions) < 2:
+        return instructions
+
+    optim_instructions: list[BaseInstruction] = [instructions[0]]
+    prev_inst = instructions[0]
+    for cur_inst in instructions[1:]:
+        if (
+            isinstance(prev_inst, CInstruction)
+            and isinstance(cur_inst, CInstruction)
+            and all(
+                [
+                    prev_inst.x == A_register(),
+                    prev_inst.op == Operation.NOP,
+                    prev_inst.jmp is None,
+                    prev_inst.dest == {D_register()},
+                    cur_inst.op != Operation.NOP,
+                    cur_inst.x == D_register() or cur_inst.y == D_register(),
+                ]
+            )
+        ):
+            del optim_instructions[-1]
+            if cur_inst.x == D_register():
+                cur_inst.x = A_register()
+            else:
+                cur_inst.y = A_register()
+
+        optim_instructions.append(cur_inst)
+        prev_inst = cur_inst
+
+    return optim_instructions
+
+
 def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
     instructions = _optimise_C_inst_dest_combination(instructions)
+    instructions = _optimise_C_inst_redundant_A_assign_make_inline(instructions)
+
+    return instructions
+
+
+def run_full_pipeline(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
+    instructions = decompress_instructions(instructions)
+    instructions = apply_optimisations(instructions)
 
     return instructions

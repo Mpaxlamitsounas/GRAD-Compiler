@@ -38,6 +38,6 @@ def test_case(value_set: list[str], inst_builder: Callable, filename: Path | str
         Assembler.cur_A = None
         values = get_inst_values(value_set.copy(), case)
         inst = inst_builder(values)
-        results.extend([inst, *Assembler.decompress_C_instruction(inst), ""])
+        results.extend([inst, *Assembler.run_full_pipeline([inst]), ""])
 
     write_lines_to_file(filename, results)
