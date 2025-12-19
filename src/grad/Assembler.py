@@ -589,15 +589,24 @@ def _optimise_C_inst_dest_combination(
         if (
             isinstance(prev_inst, CInstruction)
             and isinstance(cur_inst, CInstruction)
-            and all(
+            and all(  # identical comp part and no dependencies
                 [
                     prev_inst.x == cur_inst.x,
                     prev_inst.y == cur_inst.y,
                     prev_inst.op == cur_inst.op,
                     prev_inst.jmp is None,
+                    cur_inst.x not in prev_inst.dest,
+                    cur_inst.y not in prev_inst.dest,
                 ]
+            )  # no memory dependencies
+            and (
+                A_register() not in prev_inst.dest
+                or (
+                    cur_inst.x.value != "M"
+                    and (cur_inst.y.value != "M" if cur_inst.y is not None else True)
+                    and all([d.value != "M" for d in cur_inst.dest])
+                )
             )
-            and not any([A_register() in prev_inst.dest, A_register() in cur_inst.dest])
         ):
             prev_inst.dest = prev_inst.dest | cur_inst.dest
             prev_inst.jmp = cur_inst.jmp
@@ -644,9 +653,34 @@ def _optimise_C_inst_redundant_A_assign_make_inline(
     return optim_instructions
 
 
+def _optimise_C_inst_dest_equal_comp(
+    instructions: list[BaseInstruction],
+) -> list[BaseInstruction]:
+    if len(instructions) == 0:
+        return []
+
+    optim_instructions: list[BaseInstruction] = []
+    for inst in instructions:
+        if isinstance(inst, CInstruction) and all(
+            [
+                all([inst.x == d for d in inst.dest]),
+                inst.y is None,
+            ]
+        ):
+            if inst.jmp is None:
+                continue
+            else:
+                inst.dest = {}
+
+        optim_instructions.append(inst)
+
+    return optim_instructions
+
+
 def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
     instructions = _optimise_C_inst_dest_combination(instructions)
     instructions = _optimise_C_inst_redundant_A_assign_make_inline(instructions)
+    instructions = _optimise_C_inst_dest_equal_comp(instructions)
 
     return instructions
 
