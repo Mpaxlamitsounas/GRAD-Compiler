@@ -480,7 +480,9 @@ def _decompress_jmp_condition_part(
                     )
 
                 else:
-                    instructions.extend(_unravel_index(inst, inst.jmp.compared))
+                    if cur_A != calc_req_A(prev_inst.jmp.compared):
+                        instructions.extend(_unravel_index(inst, inst.jmp.compared))
+
                     instructions.append(
                         CInstruction(
                             inst.line_num,
@@ -589,11 +591,13 @@ def _optimise_C_inst_dest_combination(
                     prev_inst.x == cur_inst.x,
                     prev_inst.y == cur_inst.y,
                     prev_inst.op == cur_inst.op,
-                    prev_inst.jmp == cur_inst.jmp,
+                    prev_inst.jmp is None,
                 ]
             )
+            and not any([A_register() in prev_inst.dest, A_register() in cur_inst.dest])
         ):
             prev_inst.dest = prev_inst.dest | cur_inst.dest
+            prev_inst.jmp = cur_inst.jmp
             continue
 
         optim_instructions.append(cur_inst)
