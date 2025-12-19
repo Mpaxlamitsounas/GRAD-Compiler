@@ -18,7 +18,7 @@ def run_test_cases():
             {D_register()},
             JumpType(Condition.GE, v[2], v[3].value),
         ),
-        "test_only_constants.txt",
+        "test_constants_only_constants.txt",
     )
 
     test_case(
@@ -31,7 +31,7 @@ def run_test_cases():
             {D_register()},
             JumpType(Condition.GE, v[1], v[2].value),
         ),
-        "test_with_register.txt",
+        "test_constants_with_register.txt",
     )
 
     test_case(
@@ -44,5 +44,5 @@ def run_test_cases():
             {D_register()},
             JumpType(Condition.GE, v[1], v[2].value),
         ),
-        "test_no_y.txt",
+        "test_constants_no_y.txt",
     )
