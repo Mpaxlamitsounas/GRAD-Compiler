@@ -19,7 +19,7 @@ def run_test_cases():
             {v[0]},
             JumpType(Condition.GE, v[3], "0"),
         ),
-        "test_memory_direct_only_memory.txt",
+        "test_memory_indirect_only_memory.txt",
     )
 
     test_case(
@@ -32,7 +32,7 @@ def run_test_cases():
             {v[0]},
             JumpType(Condition.GE, v[2], "0"),
         ),
-        "test_memory_direct_with_register.txt",
+        "test_memory_indirect_with_register.txt",
     )
 
     test_case(
@@ -45,5 +45,5 @@ def run_test_cases():
             {v[0]},
             JumpType(Condition.GE, v[2], "0"),
         ),
-        "test_memory_direct_no_y.txt",
+        "test_memory_indirect_no_y.txt",
     )
