@@ -5,7 +5,7 @@ from grad.Types.Instructions import (
     CInstruction,
     LabelInstruction,
 )
-from grad.Types.Operations import Operation
+from grad.Types.Operations import Multiplicity, Operation
 from grad.util import A_register, D_register, M_register, constant_operand
 
 cur_A: int | None = None
@@ -540,6 +540,9 @@ def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
 
     inst = inst.copy()
     instructions: list[BaseInstruction] = []
+
+    if inst.op.multiplicity == Multiplicity.UNARY:
+        inst.y = None
 
     _decompress_operation_part(inst, instructions)
     _decompress_destination_part(inst, instructions)
