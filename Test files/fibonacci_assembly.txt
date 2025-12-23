@@ -5,6 +5,7 @@ M[1] := 65
 M[64] := 0
 M[65] := 1
 D := M[65]
+(START_LOOP)
 @0
 M := M + 1
 A := M
@@ -12,4 +13,4 @@ D := M + D
 @1
 M := M + 1
 A := M
-M := D ; JMP 8
+M := D ; JMP START_LOOP
