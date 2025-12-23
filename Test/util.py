@@ -16,7 +16,7 @@ def make_combination_cases(length: int) -> list[tuple[bool, ...]]:
 
 
 def write_lines_to_file(filename: Path | str, lines: list[str]):
-    with open(Path.cwd() / "Generated" / filename, "w") as f:
+    with open(Path.cwd() / "Generated" / "Tests" / filename, "w") as f:
         f.writelines([str(line) + "\n" for line in lines])
 
 
