@@ -589,11 +589,11 @@ def decompress_instructions(
 def substitute_jump_labels(
     instructions: list[BaseInstruction],
 ) -> list[BaseInstruction]:
-    labels: dict[str, int] = {}
+    labels: dict[str, str] = {}
     cnt = 0
     for idx, inst in enumerate(instructions.copy()):
         if isinstance(inst, LabelInstruction):
-            labels[inst.value] = idx - cnt
+            labels[inst.value] = str(idx - cnt)
             cnt += 1
             instructions.remove(inst)
 
