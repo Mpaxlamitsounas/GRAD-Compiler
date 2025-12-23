@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
-from grad.Types import Condition, JumpType, Operand
-from grad.Types.Operations import OperationType
+from grad.Types import Condition, JumpType, Operand, OperationType
 
 
 @dataclass
