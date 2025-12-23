@@ -1,12 +1,11 @@
 from grad import Context
-from grad.Types import Condition, JumpType, Operand, OperandType
+from grad.Types import Condition, JumpType, Operand, OperandType, Operation
 from grad.Types.Instructions import (
     AInstruction,
     BaseInstruction,
     CInstruction,
     LabelInstruction,
 )
-from grad.Types.Operations import Operation
 from grad.util import constant_operand, strip_and_filter_all
 
 
@@ -69,21 +68,48 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
             # dest = rest
             if ":=" in line:
                 dest, rest = line.split(":=")
+
             else:
                 dest, rest = None, line
 
             # operation ; jmp
             if ";" in rest:
                 operation_str, jmp = rest.split(";")
+
             else:
                 jmp = None
                 operation_str = rest
 
             # operand operation operand
-            if "+" in operation_str:
+            if "&" in operation_str:
+                operation = Operation.AND
+
+            elif "|" in operation_str:
+                parts = strip_and_filter_all(operation_str.split("|"))
+                operation = Operation.OR if len(parts) == 2 else Operation.ABS
+
+            elif "~" in operation_str:
+                operation = Operation.NOT
+
+            elif "+" in operation_str:
                 operation = Operation.ADD
+
             elif "-" in operation_str:
-                operation = Operation.SUB
+                parts = strip_and_filter_all(operation_str.split("-"))
+                operation = Operation.SUB if len(parts) == 2 else Operation.NEG
+
+            elif "*" in operation_str:
+                operation = Operation.MULT
+
+            elif "/" in operation_str:
+                operation = Operation.DIV
+
+            elif "%" in operation_str:
+                operation = Operation.MOD
+
+            elif "_/" in operation_str:
+                operation = Operation.SQRT
+
             else:
                 operation = Operation.NOP
 
@@ -124,7 +150,9 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
 
                             case 2:
                                 jmp = JumpType(
-                                    Condition(jmp[0]), parse_operand(jmp[1]), None
+                                    Condition.get_from_value(jmp[0]),
+                                    parse_operand(jmp[1]),
+                                    None,
                                 )
 
                     case 2:
@@ -135,7 +163,9 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
                             raise ValueError
 
                         jmp = JumpType(
-                            Condition(jmp_cond), parse_operand(jmp_oper), jmp_dest
+                            Condition.get_from_value(jmp_cond),
+                            parse_operand(jmp_oper),
+                            jmp_dest,
                         )
 
                     case _:

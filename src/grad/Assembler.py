@@ -1,11 +1,17 @@
-from grad.Types import Condition, JumpType, Operand, OperandType
+from grad.Types import (
+    Condition,
+    JumpType,
+    Multiplicity,
+    Operand,
+    OperandType,
+    Operation,
+)
 from grad.Types.Instructions import (
     AInstruction,
     BaseInstruction,
     CInstruction,
     LabelInstruction,
 )
-from grad.Types.Operations import Multiplicity, Operation
 from grad.util import A_register, D_register, M_register, constant_operand
 
 cur_A: int | None = None
@@ -18,21 +24,24 @@ def decompress_A_instruction(inst: AInstruction) -> list[BaseInstruction]:
     return [inst.copy()]
 
 
-def _check_instruction_validity(inst: CInstruction) -> bool:
+def check_inst_validity(inst: CInstruction) -> tuple[bool, str]:
     if any(
         [
             d.type == OperandType.Constant or d.value == "1" or d.value == "2"
             for d in inst.dest
         ]
     ):
-        print(f"ERROR Can only assign to registers A, M, or D.")
-        raise ValueError
+        return False, "ERROR Can only assign to registers A, M, or D."
 
-    elif len([dest for dest in inst.dest if dest.value == "M"]) > 1:
-        print(f"ERROR Can output to at most one memory location at a time.")
-        return False
+    if len([dest for dest in inst.dest if dest.value == "M"]) > 1:
+        return False, "ERROR Can output to at most one memory location at a time."
 
-    return True
+    if any([A_register() == inst.x, A_register() == inst.y]) and any(
+        [inst.x.value == "M", inst.y is not None and inst.y.value == "M"]
+    ):
+        return False, "ERROR Can not utilise A register and memory at the same time."
+
+    return True, ""
 
 
 def calc_req_A(op: Operand) -> str:
@@ -534,9 +543,9 @@ def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
         print(f"INFO Skipping instruction with no effect {inst}")
         return []
 
-    is_valid = _check_instruction_validity(inst)
+    is_valid, err_msg = check_inst_validity(inst)
     if not is_valid:
-        raise ValueError
+        raise ValueError(err_msg)
 
     inst = inst.copy()
     instructions: list[BaseInstruction] = []
@@ -553,15 +562,15 @@ def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
     return instructions
 
 
-def decompress_instruction(inst: BaseInstruction) -> list[BaseInstruction]:
-    if isinstance(inst, AInstruction):
-        return decompress_A_instruction(inst)
+def decompress_instruction(instruction: BaseInstruction) -> list[BaseInstruction]:
+    if isinstance(instruction, AInstruction):
+        return decompress_A_instruction(instruction)
 
-    elif isinstance(inst, CInstruction):
-        return decompress_C_instruction(inst)
+    elif isinstance(instruction, CInstruction):
+        return decompress_C_instruction(instruction)
 
-    elif isinstance(inst, LabelInstruction):
-        return [inst.copy()]
+    elif isinstance(instruction, LabelInstruction):
+        return [instruction.copy()]
 
     else:
         return []
@@ -577,7 +586,29 @@ def decompress_instructions(
     return decompressed_instructions
 
 
-def _optimise_C_inst_dest_combination(
+def substitute_jump_labels(
+    instructions: list[BaseInstruction],
+) -> list[BaseInstruction]:
+    labels: dict[str, int] = {}
+    cnt = 0
+    for idx, inst in enumerate(instructions.copy()):
+        if isinstance(inst, LabelInstruction):
+            labels[inst.value] = idx - cnt
+            cnt += 1
+            instructions.remove(inst)
+
+    for inst in instructions:
+        if isinstance(inst, AInstruction):
+            if inst.value in labels:
+                inst.value = labels[inst.value]
+
+            elif not inst.value.isdigit():
+                raise ValueError
+
+    return instructions
+
+
+def _optimise_C_inst_dest_merge(
     instructions: list[BaseInstruction],
 ) -> list[BaseInstruction]:
     if len(instructions) < 2:
@@ -653,7 +684,7 @@ def _optimise_C_inst_redundant_A_assign_make_inline(
     return optim_instructions
 
 
-def _optimise_C_inst_dest_equal_comp(
+def _optimise_C_inst_remove_self_assign(
     instructions: list[BaseInstruction],
 ) -> list[BaseInstruction]:
     if len(instructions) == 0:
@@ -677,10 +708,29 @@ def _optimise_C_inst_dest_equal_comp(
     return optim_instructions
 
 
+def _optimise_A_inst_unused_A_load(
+    instructions: list[BaseInstruction],
+) -> list[BaseInstruction]:
+    if len(instructions) < 2:
+        return instructions
+
+    optim_instructions: list[BaseInstruction] = [instructions[0]]
+    prev_inst = instructions[0]
+    for cur_inst in instructions[1:]:
+        if isinstance(prev_inst, AInstruction) and isinstance(cur_inst, AInstruction):
+            del optim_instructions[-1]
+
+        optim_instructions.append(cur_inst)
+        prev_inst = cur_inst
+
+    return optim_instructions
+
+
 def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
-    instructions = _optimise_C_inst_dest_combination(instructions)
+    instructions = _optimise_C_inst_dest_merge(instructions)
     instructions = _optimise_C_inst_redundant_A_assign_make_inline(instructions)
-    instructions = _optimise_C_inst_dest_equal_comp(instructions)
+    instructions = _optimise_C_inst_remove_self_assign(instructions)
+    instructions = _optimise_A_inst_unused_A_load(instructions)
 
     return instructions
 
@@ -688,5 +738,6 @@ def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruc
 def run_full_pipeline(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
     instructions = decompress_instructions(instructions)
     instructions = apply_optimisations(instructions)
+    instructions = substitute_jump_labels(instructions)
 
     return instructions
