@@ -29,7 +29,7 @@ def compile_C_inst(inst: CInstruction) -> bytes:
     value = 0x8000
 
     # memory bit
-    value |= 0x4000 if any([inst.x == A_register(), inst.y == A_register()]) else 0x0000
+    value |= 0x4000 if not any([inst.x == A_register(), inst.y == A_register()]) else 0x0000
 
     # inputs selection
     shift = 0
