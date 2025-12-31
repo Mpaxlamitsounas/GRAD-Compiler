@@ -1,9 +1,7 @@
 symbols: dict[str, str] = {f"M{idx}": f"M[{idx}]" for idx in range(0, 64)}
+# TODO
 reserved: tuple[str, ...] = (
     "@",
-    "A",
-    "M",
-    "D",
     ":=",
     ":",
     ";",

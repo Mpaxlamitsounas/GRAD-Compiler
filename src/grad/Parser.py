@@ -10,7 +10,13 @@ from grad.util import constant_operand, strip_and_filter_all
 
 
 def parse_operand(operand: str) -> Operand:
-    if operand == "" or " " in operand:
+    if " " in operand or operand == "":
+        raise ValueError
+
+    if not operand.isalnum() and operand[0] != "M":
+        raise ValueError
+
+    if operand in Context.reserved:
         raise ValueError
 
     elif any(
@@ -23,7 +29,7 @@ def parse_operand(operand: str) -> Operand:
         return Operand(OperandType.Register, "M", operand)
 
     elif operand in Context.symbols:
-        return Operand(OperandType.Constant, Context.symbols[operand])
+        return parse_operand(Context.symbols[operand])
 
     else:
         return Operand(OperandType.Constant, operand)
@@ -60,8 +66,7 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
             if line == "":
                 raise ValueError
 
-            Context.symbols[name] = str(Context.available_RAM[0])
-            del Context.available_RAM[0]
+            Context.symbols[name] = f"M[{Context.available_RAM.pop()}]"
 
         # C-Instruction
         else:
