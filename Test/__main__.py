@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import Constants
 import Handmade
 import Memory_direct
@@ -6,7 +8,7 @@ import Mixed
 import Sequences
 
 
-def run_test():
+def run_tests():
     Constants.run_test_cases()
     Memory_direct.run_test_cases()
     Memory_indirect.run_test_cases()
@@ -16,4 +18,5 @@ def run_test():
 
 
 if __name__ == "__main__":
-    run_test()
+    (Path.cwd() / "Generated" / "Tests").mkdir(exist_ok=True, parents=True)
+    run_tests()
