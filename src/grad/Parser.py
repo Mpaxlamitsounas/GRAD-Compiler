@@ -101,7 +101,7 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
             elif "*" in operation_str:
                 operation = Operation.MULT
 
-            elif "/" in operation_str:
+            elif "/" in operation_str and "_" not in operation_str:
                 operation = Operation.DIV
 
             elif "%" in operation_str:

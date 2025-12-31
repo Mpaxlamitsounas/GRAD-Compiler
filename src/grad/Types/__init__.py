@@ -84,7 +84,9 @@ class OperationType:
     bit_repr: int
 
     def __str__(self):
-        if self.multiplicity == Multiplicity.UNARY:
+        if self.symbol == "_/":
+            return self.symbol + "{}"
+        elif self.multiplicity == Multiplicity.UNARY:
             return self.symbol + "{}" + self.symbol
         else:
             return "{} " + self.symbol + " {}"
