@@ -1,3 +1,5 @@
+from typing import TextIO
+
 from grad import Context
 from grad.Types import Conditions, JumpType, Operand, OperandType, Operation
 from grad.Types.Instructions import (
@@ -37,14 +39,17 @@ def parse_operand(operand: str) -> Operand:
 
 def parse_instructions(
     file: list[str],
+    output_file: TextIO | None = None
 ) -> list[BaseInstruction] | list[AInstruction | CInstruction]:
     instructions: list[BaseInstruction] = []
     line_num: int = 0
+    inst: BaseInstruction | None = None
 
     for line in file:
         # A-Instruction
         if "@" in line:
-            instructions.append(AInstruction(line_num, line[1:].strip()))
+            inst = AInstruction(line_num, line[1:].strip())
+            instructions.append(inst)
 
         # Alias
         elif ":" in line and ":=" not in line:
@@ -60,7 +65,8 @@ def parse_instructions(
             if len(name) == 0:
                 raise ValueError
 
-            instructions.append(LabelInstruction(line_num, name))
+            inst = LabelInstruction(line_num, name)
+            instructions.append(inst)
 
         # Variable
         elif line.startswith("VAR "):
@@ -179,8 +185,13 @@ def parse_instructions(
                     case _:
                         raise ValueError
 
-            instructions.append(CInstruction(line_num, x, y, operation, dest, jmp))
+            inst = CInstruction(line_num, x, y, operation, dest, jmp)
+            instructions.append(inst)
 
         line_num += 1
+
+        if output_file is not None and inst is not None:
+            output_file.write(f"{inst}\n")
+            inst = None
 
     return instructions

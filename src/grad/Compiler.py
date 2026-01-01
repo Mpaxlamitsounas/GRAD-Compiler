@@ -1,3 +1,5 @@
+from typing import BinaryIO
+
 from grad.Types import Operand
 from grad.Types.Instructions import AInstruction, CInstruction
 from grad.util import A_register, D_register, ONE_register, TWO_register, is_M_register
@@ -79,26 +81,32 @@ def compile_C_inst(inst: CInstruction) -> bytes:
     return value.to_bytes(2, "big")
 
 
-def compile_instruction(instruction: AInstruction | CInstruction) -> bytes:
+def compile_instruction(instruction: AInstruction | CInstruction, output_file: BinaryIO | None = None) -> bytes:
     if isinstance(instruction, AInstruction):
         is_valid, err_msg, value = check_A_inst_validity(instruction)
         if not is_valid:
             raise ValueError(err_msg)
 
-        return compile_A_inst(instruction)
+        inst = compile_A_inst(instruction)
 
     elif isinstance(instruction, CInstruction):
         is_valid, err_msg = check_C_inst_validity(instruction)
         if not is_valid:
             raise ValueError(err_msg)
 
-        return compile_C_inst(instruction)
+        inst = compile_C_inst(instruction)
 
     else:
         raise ValueError
 
+    if output_file is not None:
+        output_file.write(f"{inst}\n")
+
+    return inst
+
 
 def compile_instructions(
     instructions: list[AInstruction | CInstruction],
+    output_file: BinaryIO | None = None
 ) -> list[bytes]:
-    return [compile_instruction(inst) for inst in instructions]
+    return [compile_instruction(inst, output_file) for inst in instructions]

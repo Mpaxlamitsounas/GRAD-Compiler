@@ -1,3 +1,5 @@
+from typing import TextIO
+
 from grad.Types import (
     Conditions,
     JumpType,
@@ -648,9 +650,13 @@ def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruc
 
 def assemble_instructions(
     instructions: list[BaseInstruction],
+    output_file: TextIO | None = None
 ) -> list[AInstruction | CInstruction]:
     instructions = decompress_instructions(instructions)
     instructions = apply_optimisations(instructions)
     instructions = substitute_jump_labels(instructions)
+
+    if output_file is not None:
+        output_file.writelines([f"{inst}\n" for inst in instructions])
 
     return instructions

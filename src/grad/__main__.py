@@ -5,7 +5,7 @@ from pathlib import Path
 from sys import argv
 
 from grad import Assembler, Compiler, Context, Parser, Preprocessor
-from grad.Types.Exceptions import ParserException
+from grad.Types.Exceptions import AssemblerException, CompilerException, ParserException
 from grad.Types.Instructions import AInstruction, CInstruction
 
 # TODO: Error types
@@ -19,24 +19,22 @@ def process_file():
         lines = Preprocessor.process_lines(f.read())
 
     # parse
-    parsed_instructions = Parser.parse_instructions(lines)
     with open(Path.cwd() / "Output" / (file_path.stem + ".p"), "wt") as f:
-        f.writelines([f"{inst}\n" for inst in parsed_instructions])
+        parsed_instructions = Parser.parse_instructions(lines, output_file=f)
 
     # assemble
     assembled_instructions: list[AInstruction | CInstruction] | None = None
     if "A" in argv[1]:
-        assembled_instructions = Assembler.assemble_instructions(parsed_instructions)
         with open(Path.cwd() / "Output" / (file_path.stem + ".a"), "wt") as f:
-            f.writelines([f"{inst}\n" for inst in assembled_instructions])
+            assembled_instructions = Assembler.assemble_instructions(parsed_instructions, output_file=f)
 
     # compile
     if "C" in argv[1]:
         if assembled_instructions is None:
             assembled_instructions = parsed_instructions
-        instructions = Compiler.compile_instructions(assembled_instructions)
+
         with open(Path.cwd() / "Output" / (file_path.stem + ".c"), "wb") as f:
-            f.writelines(instructions)
+            Compiler.compile_instructions(assembled_instructions, output_file=f)
 
 
 def main():
@@ -57,7 +55,29 @@ Functions:
 
     try:
         process_file()
+
     except ParserException as e:
+        print(
+            f"""Encountered an error while parsing line {e.inst.line_num}
+    Line content: "{e.inst}"
+    Error message: {e.msg}."""
+        )
+        return
+
+    except AssemblerException as e:
+        print(
+            f"""Encountered an error while assembling line {e.inst.line_num}
+    Line content: "{e.inst}"
+    Error message: {e.msg}."""
+        )
+        return
+
+    except CompilerException as e:
+        print(
+            f"""Encountered an error while compiling line {e.inst.line_num}
+    Line content: "{e.inst}"
+    Error message: {e.msg}."""
+        )
         return
 
 
