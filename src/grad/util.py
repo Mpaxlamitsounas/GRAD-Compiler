@@ -9,24 +9,15 @@ def strip_and_filter_all(s_list: list[str], exclude_str: str = "") -> list[str]:
     return [s for s in strip_all(s_list) if s.strip() != exclude_str]
 
 
-def ONE_register() -> Operand:
-    return Operand(OperandType.Register, "1")
+ONE_register = Operand(OperandType.Register, "1")
+TWO_register = Operand(OperandType.Register, "2")
+D_register = Operand(OperandType.Register, "D")
+A_register = Operand(OperandType.Register, "A")
+M_simple_register = Operand(OperandType.Register, "M")
 
 
-def TWO_register() -> Operand:
-    return Operand(OperandType.Register, "2")
-
-
-def D_register() -> Operand:
-    return Operand(OperandType.Register, "D")
-
-
-def A_register() -> Operand:
-    return Operand(OperandType.Register, "A")
-
-
-def M_register(operand: Operand | None) -> Operand:
-    return Operand(OperandType.Register, "M", operand)
+def is_M_register(op: Operand) -> bool:
+    return op.value == "M"
 
 
 def constant_operand(value: str) -> Operand:

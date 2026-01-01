@@ -25,7 +25,7 @@ def run_test_cases():
         lambda v: CInstruction(
             0,
             v[1],
-            ONE_register(),
+            ONE_register,
             Operation.ADD,
             {v[0]},
             JumpType(Condition.GE, v[2], "0"),
@@ -40,7 +40,7 @@ def run_test_cases():
             v[0],
             v[1],
             Operation.ADD,
-            {D_register()},
+            {D_register},
             JumpType(Condition.GE, v[2], "0"),
         ),
         "test_memory_direct_register_dest.txt",

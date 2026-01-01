@@ -54,7 +54,7 @@ def get_test_cases() -> list[BaseInstruction]:
             JumpType(Condition.GE, constant_operand("5"), "0"),
         ),
         CInstruction(
-            0, D_register(), ONE_register(), Operation.ADD, {A_register()}, None
+            0, D_register, ONE_register, Operation.ADD, {A_register}, None
         ),
     ]
 
@@ -63,6 +63,6 @@ def run_test_cases():
     results: list[BaseInstruction | str] = []
     for inst in get_test_cases():
         Assembler.cur_A = None
-        results.extend([inst, "---", *Assembler.run_full_pipeline([inst]), ""])
+        results.extend([inst, "---", *Assembler.assemble_instructions([inst]), ""])
 
     write_lines_to_file("test_handmade.txt", results)

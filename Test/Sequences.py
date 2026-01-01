@@ -8,10 +8,10 @@ from grad.util import D_register
 def run_test_cases():
     run_test_case_sequence(
         [
-            CInstruction(0, D_register(), None, Operation.NOP, {D_register()}, None),
+            CInstruction(0, D_register, None, Operation.NOP, {D_register}, None),
             CInstruction(
                 0,
-                D_register(),
+                D_register,
                 None,
                 Operation.NOP,
                 {Operand(OperandType.Register, "M", None)},
@@ -19,7 +19,7 @@ def run_test_cases():
             ),
             CInstruction(
                 0,
-                D_register(),
+                D_register,
                 None,
                 Operation.NOP,
                 {Operand(OperandType.Register, "A", None)},
