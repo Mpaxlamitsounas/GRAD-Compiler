@@ -35,7 +35,9 @@ def parse_operand(operand: str) -> Operand:
         return Operand(OperandType.Constant, operand)
 
 
-def parse_instructions(file: list[str]) -> list[BaseInstruction]:
+def parse_instructions(
+    file: list[str],
+) -> list[BaseInstruction] | list[AInstruction | CInstruction]:
     instructions: list[BaseInstruction] = []
     line_num: int = 0
 
@@ -80,6 +82,7 @@ def parse_instructions(file: list[str]) -> list[BaseInstruction]:
             # operation ; jmp
             if ";" in rest:
                 operation_str, jmp = rest.split(";")
+                jmp = jmp.replace("IF", "")
 
             else:
                 jmp = None
