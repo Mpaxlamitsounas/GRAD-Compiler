@@ -2,6 +2,7 @@ from typing import TextIO
 
 from grad import Context
 from grad.Types import Conditions, JumpType, Operand, OperandType, Operation
+from grad.Types.Exceptions import ParserException
 from grad.Types.Instructions import (
     AInstruction,
     BaseInstruction,
@@ -10,16 +11,23 @@ from grad.Types.Instructions import (
 )
 from grad.util import constant_operand, strip_and_filter_all
 
+line_num: int = 0
+cur_line: str = ""
+
 
 def parse_operand(operand: str) -> Operand:
-    if " " in operand or operand == "":
-        raise ValueError
+    if (operand := operand.strip()) == "":
+        raise ParserException(line_num, cur_line, "Tried to parse empty operand.")
 
-    if not operand.isalnum() and operand[0] != "M":
-        raise ValueError
+    if not operand.isalnum() and not operand.startswith("M["):
+        raise ParserException(
+            line_num,
+            cur_line,
+            f'Identifiers must be alphanumeric ("{operand}" is not).',
+        )
 
     if operand in Context.reserved:
-        raise ValueError
+        raise ParserException(line_num, cur_line, f'Operand "{operand}" is reserved.')
 
     elif any(
         [operand == "D", operand == "A", operand == "1", operand == "2", operand == "M"]
@@ -37,161 +45,210 @@ def parse_operand(operand: str) -> Operand:
         return Operand(OperandType.Constant, operand)
 
 
-def parse_instructions(
-    file: list[str],
-    output_file: TextIO | None = None
-) -> list[BaseInstruction] | list[AInstruction | CInstruction]:
-    instructions: list[BaseInstruction] = []
-    line_num: int = 0
-    inst: BaseInstruction | None = None
+def parse_A_instruction(line: str) -> AInstruction:
+    value = line[1:].strip()
+    if value == "":
+        raise ParserException(
+            line_num, cur_line, "A instruction must have non-empty value."
+        )
 
-    for line in file:
-        # A-Instruction
-        if "@" in line:
-            inst = AInstruction(line_num, line[1:].strip())
-            instructions.append(inst)
+    return AInstruction(line_num, value)
 
-        # Alias
-        elif ":" in line and ":=" not in line:
-            split = strip_and_filter_all(line.split(":"))
-            if len(split) != 2:
-                raise ValueError
 
-            Context.symbols[split[0]] = split[1]
+def parse_alias(line: str) -> None:
+    split = strip_and_filter_all(line.split(":"))
+    if len(split) != 2:
+        raise ParserException(
+            line_num,
+            cur_line,
+            f'Alias declaration missing name or value, or has too many ":" (NAME:VALUE).',
+        )
 
-        # Jump label
-        elif line.startswith("("):
-            name = line[1:-1]
-            if len(name) == 0:
-                raise ValueError
+    Context.symbols[split[0]] = split[1]
 
-            inst = LabelInstruction(line_num, name)
-            instructions.append(inst)
 
-        # Variable
-        elif line.startswith("VAR "):
-            name = line.replace("VAR ", "").strip()
-            if line == "":
-                raise ValueError
+def parse_jump_label(line: str) -> LabelInstruction:
+    name = line[1:-1]
+    if name == "":
+        raise ParserException(
+            line_num, cur_line, "Jump labels must have non-empty name."
+        )
 
-            Context.symbols[name] = f"M[{Context.available_RAM.pop()}]"
+    return LabelInstruction(line_num, name)
 
-        # C-Instruction
-        else:
-            # dest = rest
-            if ":=" in line:
-                dest, rest = line.split(":=")
 
-            else:
-                dest, rest = None, line
+def parse_variable(line: str) -> None:
+    name = line.replace("VAR ", "").strip()
+    if line == "":
+        raise ParserException(
+            line_num, cur_line, "Variable declarations must have non-empty name."
+        )
 
-            # operation ; jmp
-            if ";" in rest:
-                operation_str, jmp = rest.split(";")
-                jmp = jmp.replace("IF", "")
+    Context.symbols[name] = f"M[{Context.available_RAM.pop()}]"
 
-            else:
-                jmp = None
-                operation_str = rest
 
-            # operand operation operand
-            if "&" in operation_str:
-                operation = Operation.AND
+def parse_C_instruction(line: str) -> CInstruction:
+    # dest = rest
+    if ":=" in line:
+        dest, rest = line.split(":=")
 
-            elif "|" in operation_str:
-                parts = strip_and_filter_all(operation_str.split("|"))
-                operation = Operation.OR if len(parts) == 2 else Operation.ABS
+    else:
+        dest, rest = None, line
 
-            elif "~" in operation_str:
-                operation = Operation.NOT
+    # operation ; jmp
+    if ";" in rest:
+        operation_str, jmp = rest.split(";")
+        jmp = jmp.replace("IF", "")
 
-            elif "+" in operation_str:
-                operation = Operation.ADD
+    else:
+        jmp = None
+        operation_str = rest
 
-            elif "-" in operation_str:
-                parts = strip_and_filter_all(operation_str.split("-"))
-                operation = Operation.SUB if len(parts) == 2 else Operation.NEG
+    # operand operation operand
+    if "&" in operation_str:
+        operation = Operation.AND
 
-            elif "*" in operation_str:
-                operation = Operation.MULT
+    elif "|" in operation_str:
+        parts = strip_and_filter_all(operation_str.split("|"))
+        operation = Operation.OR if len(parts) == 2 else Operation.ABS
 
-            elif "/" in operation_str and "_" not in operation_str:
-                operation = Operation.DIV
+    elif "~" in operation_str:
+        operation = Operation.NOT
 
-            elif "%" in operation_str:
-                operation = Operation.MOD
+    elif "+" in operation_str:
+        operation = Operation.ADD
 
-            elif "_/" in operation_str:
-                operation = Operation.SQRT
+    elif "-" in operation_str:
+        parts = strip_and_filter_all(operation_str.split("-"))
+        operation = Operation.SUB if len(parts) == 2 else Operation.NEG
 
-            else:
-                operation = Operation.NOP
+    elif "*" in operation_str:
+        operation = Operation.MULT
 
-            try:
-                operands = strip_and_filter_all(operation_str.split(operation.symbol))
-            # empty separator (NOP)
-            except ValueError:
-                operands = (
-                    [operation_str.strip()] if operation_str.strip() != "" else []
-                )
+    elif "/" in operation_str and "_" not in operation_str:
+        operation = Operation.DIV
 
-            if len(operands) != operation.multiplicity.value:
-                raise ValueError
+    elif "%" in operation_str:
+        operation = Operation.MOD
 
-            else:
-                x, y = parse_operand(operands[0]), (
-                    parse_operand(operands[1]) if len(operands) != 1 else None
-                )
+    elif "_/" in operation_str:
+        operation = Operation.SQRT
 
-            if dest is not None:
-                dest = {parse_operand(d) for d in strip_and_filter_all(dest.split(","))}
+    else:
+        operation = Operation.NOP
 
-            if jmp is not None:
-                jmp = strip_and_filter_all(jmp.split("JMP"))
+    try:
+        operands = strip_and_filter_all(operation_str.split(operation.symbol))
+    # empty separator (NOP)
+    except ValueError:
+        operands = [operation_str.strip()] if operation_str.strip() != "" else []
 
+    if len(operands) != operation.multiplicity.value:
+        raise ParserException(
+            line_num,
+            cur_line,
+            f"Operation multiplicity ({operation.multiplicity.value}) and operand count ({len(operands)}) do not match.",
+        )
+
+    else:
+        x, y = parse_operand(operands[0]), (
+            parse_operand(operands[1]) if len(operands) != 1 else None
+        )
+
+    if dest is not None:
+        dest = {parse_operand(d) for d in strip_and_filter_all(dest.split(","))}
+
+    if jmp is not None:
+        jmp = strip_and_filter_all(jmp.split("JMP"))
+
+        match len(jmp):
+            # compatibility case (already parsed)
+            case 0:
+                jmp = JumpType(Conditions.TRUE, constant_operand("0"), None)
+
+            case 1:
+                jmp = strip_and_filter_all(jmp[0].split())
                 match len(jmp):
-                    # compatibility case (already parsed)
-                    case 0:
-                        jmp = JumpType(Conditions.TRUE, constant_operand("0"), None)
-
                     case 1:
-                        jmp = strip_and_filter_all(jmp[0].split())
-                        match len(jmp):
-                            case 1:
-                                jmp = JumpType(
-                                    Conditions.TRUE, constant_operand("0"), jmp[0]
-                                )
-
-                            case 2:
-                                jmp = JumpType(
-                                    Conditions.get_from_value(jmp[0]),
-                                    parse_operand(jmp[1]),
-                                    None,
-                                )
-
-                    case 2:
-                        jmp_dest = jmp[1]
-                        try:
-                            jmp_cond, jmp_oper = strip_and_filter_all(jmp[0].split())
-                        except:
-                            raise ValueError
-
                         jmp = JumpType(
-                            Conditions.get_from_value(jmp_cond),
-                            parse_operand(jmp_oper),
-                            jmp_dest,
+                            Conditions.TRUE,
+                            constant_operand("0"),
+                            (
+                                jmp[0]
+                                if jmp[0] not in Context.symbols
+                                else Context.symbols[jmp[0]]
+                            ),
                         )
 
-                    case _:
-                        raise ValueError
+                    case 2:
+                        jmp = JumpType(
+                            Conditions.get_from_value(jmp[0]),
+                            parse_operand(jmp[1]),
+                            None,
+                        )
 
-            inst = CInstruction(line_num, x, y, operation, dest, jmp)
+            case 2:
+                jmp_dest = (
+                    jmp[1] if jmp[1] not in Context.symbols else Context.symbols[jmp[1]]
+                )
+                try:
+                    jmp_cond, jmp_oper = strip_and_filter_all(jmp[0].split())
+                except:
+                    raise ParserException(
+                        line_num, cur_line, "Failed to parse jump condition."
+                    )
+
+                jmp = JumpType(
+                    Conditions.get_from_value(jmp_cond),
+                    parse_operand(jmp_oper),
+                    jmp_dest,
+                )
+
+            case _:
+                raise ParserException(
+                    line_num, cur_line, "Failed to parse jump part of instruction."
+                )
+
+    return CInstruction(line_num, x, y, operation, dest, jmp)
+
+
+def parse_line(line: str) -> BaseInstruction | None:
+    global line_num, cur_line
+
+    ret_value: BaseInstruction | None = None
+    cur_line = line
+
+    if "@" in line:
+        ret_value = parse_A_instruction(line)
+
+    elif ":" in line and ":=" not in line:
+        parse_alias(line)
+
+    elif line.startswith("("):
+        ret_value = parse_jump_label(line)
+
+    elif line.startswith("VAR "):
+        parse_variable(line)
+
+    else:
+        ret_value = parse_C_instruction(line)
+
+    line_num += 1
+
+    return ret_value
+
+
+def parse_lines(
+    file: list[str], output_file: TextIO | None = None
+) -> list[BaseInstruction] | list[AInstruction | CInstruction]:
+    instructions: list[BaseInstruction] = []
+    for line in file:
+        inst = parse_line(line)
+
+        if inst is not None:
             instructions.append(inst)
 
-        line_num += 1
-
-        if output_file is not None and inst is not None:
-            output_file.write(f"{inst}\n")
-            inst = None
+            if output_file is not None:
+                output_file.write(f"{inst}\n")
 
     return instructions

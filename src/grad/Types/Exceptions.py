@@ -1,10 +1,11 @@
-from grad.Types.Instructions import BaseInstruction
+from dataclasses import dataclass
 
 
+@dataclass
 class GradException(Exception):
-    def __init__(self, msg: str, inst: BaseInstruction):
-        self.msg = msg
-        self.inst = inst
+    line_num: int
+    line: str
+    message: str
 
 
 class ParserException(GradException):
