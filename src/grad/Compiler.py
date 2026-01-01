@@ -29,10 +29,12 @@ def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
 
     # operand does not use build in registers
     for reg in [r for r in [inst.x, inst.y] if r is not None]:
-        if (
-            reg not in [ONE_register, TWO_register, D_register, A_register]
-            and not  is_M_register(reg)
-        ):
+        if reg not in [
+            ONE_register,
+            TWO_register,
+            D_register,
+            A_register,
+        ] and not is_M_register(reg):
             return False, ""
 
     return True, ""
@@ -43,9 +45,7 @@ def compile_C_inst(inst: CInstruction) -> bytes:
     value = 0x8000
 
     # memory bit
-    value |= (
-        0x4000 if not any([inst.x == A_register, inst.y == A_register]) else 0x0000
-    )
+    value |= 0x4000 if not any([inst.x == A_register, inst.y == A_register]) else 0x0000
 
     # inputs selection
     shift = 0

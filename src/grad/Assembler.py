@@ -297,7 +297,17 @@ def _decompress_destination_part(
         if cur_A != calc_req_A(mem_dest):
             del instructions[-1]
             # inst utilises A or M registers in computation
-            if any(any([is_M_register(reg), reg == A_register, reg.type == OperandType.Constant]) for reg in [inst.x, inst.y] if reg is not None):
+            if any(
+                any(
+                    [
+                        is_M_register(reg),
+                        reg == A_register,
+                        reg.type == OperandType.Constant,
+                    ]
+                )
+                for reg in [inst.x, inst.y]
+                if reg is not None
+            ):
                 instructions.append(
                     CInstruction(
                         inst.line_num,

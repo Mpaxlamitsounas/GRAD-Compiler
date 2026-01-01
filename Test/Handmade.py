@@ -53,9 +53,7 @@ def get_test_cases() -> list[BaseInstruction]:
             {mmm0},
             JumpType(Condition.GE, constant_operand("5"), "0"),
         ),
-        CInstruction(
-            0, D_register, ONE_register, Operation.ADD, {A_register}, None
-        ),
+        CInstruction(0, D_register, ONE_register, Operation.ADD, {A_register}, None),
     ]
 
 
