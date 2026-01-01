@@ -1,25 +1,25 @@
 from typing import BinaryIO
 
 from grad.Types import Operand
+from grad.Types.Exceptions import CompilerException
 from grad.Types.Instructions import AInstruction, CInstruction
 from grad.util import A_register, D_register, ONE_register, TWO_register, is_M_register
 
 
 def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:
     if not inst.value.isdigit():
-        return False, "TODO", None
+        return False, "A instruction value must be numeric,", None
 
-    value = int(inst.value)
-    if value < 0:
-        return False, "TODO", value
+    if (value := int(inst.value)) < 0:
+        return False, "A instruction value must be non negative.", value
 
     if value > 2**15 - 1:
-        return False, "TODO", value
+        return False, "A instruction value must be at most 2^15 - 1.", value
 
     return True, "", value
 
 
-def compile_A_inst(inst: AInstruction) -> bytes:
+def compile_A_instruction(inst: AInstruction) -> bytes:
     return int(inst.value).to_bytes(2, "big")
 
 
@@ -27,7 +27,7 @@ def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
     # memory access is not Simple
     memory_operand: list[Operand] = [d for d in inst.dest if is_M_register(d)]
     if any([d.pointer is not None for d in memory_operand]):
-        return False, ""
+        return False, "Memory access must be Simple for compilation."
 
     # operand does not use build in registers
     for reg in [r for r in [inst.x, inst.y] if r is not None]:
@@ -37,12 +37,12 @@ def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
             D_register,
             A_register,
         ] and not is_M_register(reg):
-            return False, ""
+            return False, "Instruction operands must be Simple for compilation."
 
     return True, ""
 
 
-def compile_C_inst(inst: CInstruction) -> bytes:
+def compile_C_instruction(inst: CInstruction) -> bytes:
     # flag bit
     value = 0x8000
 
@@ -81,32 +81,37 @@ def compile_C_inst(inst: CInstruction) -> bytes:
     return value.to_bytes(2, "big")
 
 
-def compile_instruction(instruction: AInstruction | CInstruction, output_file: BinaryIO | None = None) -> bytes:
+def compile_instruction(
+    instruction: AInstruction | CInstruction, output_file: BinaryIO | None = None
+) -> bytes:
     if isinstance(instruction, AInstruction):
         is_valid, err_msg, value = check_A_inst_validity(instruction)
         if not is_valid:
-            raise ValueError(err_msg)
+            raise CompilerException(instruction.line_num, str(instruction), err_msg)
 
-        inst = compile_A_inst(instruction)
+        inst = compile_A_instruction(instruction)
 
     elif isinstance(instruction, CInstruction):
         is_valid, err_msg = check_C_inst_validity(instruction)
         if not is_valid:
-            raise ValueError(err_msg)
+            raise CompilerException(instruction.line_num, str(instruction), err_msg)
 
-        inst = compile_C_inst(instruction)
+        inst = compile_C_instruction(instruction)
 
     else:
-        raise ValueError
+        raise CompilerException(
+            instruction.line_num,
+            str(instruction),
+            "Instructions to be compiled must either be A or C instructions.",
+        )
 
     if output_file is not None:
-        output_file.write(f"{inst}\n")
+        output_file.write(inst)
 
     return inst
 
 
 def compile_instructions(
-    instructions: list[AInstruction | CInstruction],
-    output_file: BinaryIO | None = None
+    instructions: list[AInstruction | CInstruction], output_file: BinaryIO | None = None
 ) -> list[bytes]:
     return [compile_instruction(inst, output_file) for inst in instructions]

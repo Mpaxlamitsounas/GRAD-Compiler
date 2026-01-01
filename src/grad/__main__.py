@@ -8,9 +8,6 @@ from grad import Assembler, Compiler, Context, Parser, Preprocessor
 from grad.Types.Exceptions import AssemblerException, CompilerException, ParserException
 from grad.Types.Instructions import AInstruction, CInstruction
 
-# TODO: Error types
-# TODO: All other TODOs
-
 
 def process_file():
     # preprocess
@@ -20,13 +17,15 @@ def process_file():
 
     # parse
     with open(Path.cwd() / "Output" / (file_path.stem + ".p"), "wt") as f:
-        parsed_instructions = Parser.parse_instructions(lines, output_file=f)
+        parsed_instructions = Parser.parse_lines(lines, output_file=f)
 
     # assemble
     assembled_instructions: list[AInstruction | CInstruction] | None = None
     if "A" in argv[1]:
         with open(Path.cwd() / "Output" / (file_path.stem + ".a"), "wt") as f:
-            assembled_instructions = Assembler.assemble_instructions(parsed_instructions, output_file=f)
+            assembled_instructions = Assembler.assemble_instructions(
+                parsed_instructions, output_file=f
+            )
 
     # compile
     if "C" in argv[1]:
@@ -58,25 +57,25 @@ Functions:
 
     except ParserException as e:
         print(
-            f"""Encountered an error while parsing line {e.inst.line_num}
-    Line content: "{e.inst}"
-    Error message: {e.msg}."""
+            f"""Encountered an error while parsing line {e.line_num}
+    Line content: "{e.line}"
+    Error message: {e.message}"""
         )
         return
 
     except AssemblerException as e:
         print(
-            f"""Encountered an error while assembling line {e.inst.line_num}
-    Line content: "{e.inst}"
-    Error message: {e.msg}."""
+            f"""Encountered an error while assembling line {e.line_num}
+    Line content: "{e.line}"
+    Error message: {e.message}"""
         )
         return
 
     except CompilerException as e:
         print(
-            f"""Encountered an error while compiling line {e.inst.line_num}
-    Line content: "{e.inst}"
-    Error message: {e.msg}."""
+            f"""Encountered an error while compiling line {e.line_num}
+    Line content: "{e.line}"
+    Error message: {e.message}"""
         )
         return
 

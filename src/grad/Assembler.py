@@ -1,5 +1,6 @@
 from typing import TextIO
 
+from grad import Context
 from grad.Types import (
     Conditions,
     JumpType,
@@ -8,6 +9,7 @@ from grad.Types import (
     OperandType,
     Operation,
 )
+from grad.Types.Exceptions import AssemblerException
 from grad.Types.Instructions import (
     AInstruction,
     BaseInstruction,
@@ -24,11 +26,14 @@ from grad.util import (
     is_M_register,
 )
 
-cur_A: int | None = None
+# None represents unknown
+cur_A: str | None = "0"
 
 
 def decompress_A_instruction(inst: AInstruction) -> list[BaseInstruction]:
     global cur_A
+
+    inst.value = Context.symbols.get(inst.value, inst.value)
 
     cur_A = inst.value
     return [inst.copy()]
@@ -41,15 +46,15 @@ def check_inst_validity(inst: CInstruction) -> tuple[bool, str]:
             for d in inst.dest
         ]
     ):
-        return False, "ERROR Can only assign to registers A, M, or D."
+        return False, "Can only assign to registers A, M, or D."
 
     if len([d for d in inst.dest if is_M_register(d)]) > 1:
-        return False, "ERROR Can output to at most one memory location at a time."
+        return False, "Can output to at most one memory location at a time."
 
     if any([A_register == inst.x, A_register == inst.y]) and any(
         [is_M_register(inst.x), inst.y is not None and is_M_register(inst.y)]
     ):
-        return False, "ERROR Can not utilise A register and memory at the same time."
+        return False, "Can not utilise A register and memory at the same time."
 
     return True, ""
 
@@ -447,12 +452,12 @@ def _decompress_jmp_destination_part(
 
 def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
     if inst.dest is None and inst.jmp is None:
-        print(f"INFO Skipping instruction with no effect {inst}")
+        print(f"Skipping instruction with no effect {inst}.")
         return []
 
     is_valid, err_msg = check_inst_validity(inst)
     if not is_valid:
-        raise ValueError(err_msg)
+        raise AssemblerException(inst.line_num, str(inst), err_msg)
 
     inst = inst.copy()
     instructions: list[BaseInstruction] = []
@@ -510,7 +515,11 @@ def substitute_jump_labels(
                 inst.value = labels[inst.value]
 
             elif not inst.value.isdigit():
-                raise ValueError
+                raise AssemblerException(
+                    inst.line_num,
+                    str(inst),
+                    "A instruction value must be numeric or a numeric alias.",
+                )
 
     # no BaseInstruction instances are ever added, and all LabelInstruction instances are removed here
     # noinspection PyTypeChecker
@@ -649,8 +658,7 @@ def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruc
 
 
 def assemble_instructions(
-    instructions: list[BaseInstruction],
-    output_file: TextIO | None = None
+    instructions: list[BaseInstruction], output_file: TextIO | None = None
 ) -> list[AInstruction | CInstruction]:
     instructions = decompress_instructions(instructions)
     instructions = apply_optimisations(instructions)
