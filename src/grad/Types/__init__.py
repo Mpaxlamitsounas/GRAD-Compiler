@@ -71,6 +71,14 @@ class JumpType:
     def copy(self):
         return JumpType(self.condition, self.compared, self.destination)
 
+    def __str__(self):
+        s = "IF " if self.condition != Condition.TRUE else ""
+        s += self.condition.value
+        s += f" {self.compared} " if self.condition != Condition.TRUE else ""
+        s += "JMP"
+        s += f" {self.destination}" if self.destination is not None else ""
+        return s
+
 
 class Multiplicity(Enum):
     UNARY = 1

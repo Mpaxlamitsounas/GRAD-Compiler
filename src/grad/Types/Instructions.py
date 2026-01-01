@@ -84,11 +84,7 @@ class CInstruction(BaseInstruction):
             else ""
         )
         s += f"{str(self.op).format(self.x, self.y)}"
-        s += (
-            f";{f" IF " if self.jmp.condition != Condition.TRUE else ""}{self.jmp.condition.value}{f" {self.jmp.compared}" if self.jmp.condition != Condition.TRUE else ""} JMP{f" {self.jmp.destination}" if self.jmp.destination is not None else ""}"
-            if self.jmp is not None
-            else ""
-        )
+        s += f"; {self.jmp}" if self.jmp is not None else ""
         return s
 
     def __repr__(self):
