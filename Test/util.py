@@ -16,7 +16,7 @@ def make_combination_cases(length: int) -> list[tuple[bool, ...]]:
 
 
 def write_lines_to_file(filename: Path | str, lines: list[str]):
-    with open(Path.cwd() / "Generated" / "Tests" / filename, "w") as f:
+    with open(Path.cwd() / "Output" / filename, "w") as f:
         f.writelines([str(line) + "\n" for line in lines])
 
 
@@ -38,7 +38,7 @@ def run_test_case(value_set: list[str], inst_builder: Callable, filename: Path |
         Assembler.cur_A = None
         values = get_inst_values(value_set.copy(), case)
         inst = inst_builder(values)
-        results.extend([inst, "---", *Assembler.run_full_pipeline([inst]), ""])
+        results.extend([inst, "---", *Assembler.assemble_instructions([inst]), ""])
 
     write_lines_to_file(filename, results)
 
@@ -46,7 +46,7 @@ def run_test_case(value_set: list[str], inst_builder: Callable, filename: Path |
 def run_test_case_sequence(instructions: list[BaseInstruction], filename: Path | str):
     results: list[BaseInstruction | str] = instructions
     results.append("---")
-    results.extend(Assembler.run_full_pipeline(instructions))
+    results.extend(Assembler.assemble_instructions(instructions))
     results.append("")
 
     write_lines_to_file(filename, results)

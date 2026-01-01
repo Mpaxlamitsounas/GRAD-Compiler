@@ -18,5 +18,5 @@ def run_tests():
 
 
 if __name__ == "__main__":
-    (Path.cwd() / "Generated" / "Tests").mkdir(exist_ok=True, parents=True)
+    (Path.cwd() / "Output").mkdir(exist_ok=True)
     run_tests()
