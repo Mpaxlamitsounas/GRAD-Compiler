@@ -1,5 +1,6 @@
+from grad.Types import Operand
 from grad.Types.Instructions import AInstruction, CInstruction
-from grad.util import A_register, D_register, ONE_register, TWO_register
+from grad.util import A_register, D_register, ONE_register, TWO_register, is_M_register
 
 
 def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:
@@ -21,6 +22,19 @@ def compile_A_inst(inst: AInstruction) -> bytes:
 
 
 def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
+    # memory access is not Simple
+    memory_operand: list[Operand] = [d for d in inst.dest if is_M_register(d)]
+    if any([d.pointer is not None for d in memory_operand]):
+        return False, ""
+
+    # operand does not use build in registers
+    for reg in [r for r in [inst.x, inst.y] if r is not None]:
+        if (
+            reg not in [ONE_register, TWO_register, D_register, A_register]
+            and not  is_M_register(reg)
+        ):
+            return False, ""
+
     return True, ""
 
 
@@ -30,7 +44,7 @@ def compile_C_inst(inst: CInstruction) -> bytes:
 
     # memory bit
     value |= (
-        0x4000 if not any([inst.x == A_register(), inst.y == A_register()]) else 0x0000
+        0x4000 if not any([inst.x == A_register, inst.y == A_register]) else 0x0000
     )
 
     # inputs selection
@@ -39,21 +53,21 @@ def compile_C_inst(inst: CInstruction) -> bytes:
         if reg is None or reg == ONE_register:
             pass
 
-        elif reg == TWO_register():
+        elif reg == TWO_register:
             value |= 0x1000 >> shift
 
-        elif reg == D_register():
+        elif reg == D_register:
             value |= 0x2000 >> shift
 
-        elif reg == A_register() or reg.value == "M":
+        elif reg == A_register or is_M_register(reg):
             value |= 0x3000 >> shift
 
         shift = 2
 
     # destination selection
-    value |= 0x0200 if D_register() in inst.dest else 0
-    value |= 0x0100 if A_register() in inst.dest else 0
-    value |= 0x0080 if any([d.value == "M" for d in inst.dest]) else 0
+    value |= 0x0200 if D_register in inst.dest else 0
+    value |= 0x0100 if A_register in inst.dest else 0
+    value |= 0x0080 if any([is_M_register(d) for d in inst.dest]) else 0
 
     # jmp condition
     if inst.jmp is not None:
