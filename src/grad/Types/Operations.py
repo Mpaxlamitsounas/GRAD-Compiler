@@ -1,0 +1,14 @@
+from grad.Types import Multiplicity, OperationType
+
+AND = OperationType("&", Multiplicity.BINARY, 0)
+OR = OperationType("|", Multiplicity.BINARY, 1)
+NOT = OperationType("~", Multiplicity.UNARY, 2)
+ADD = OperationType("+", Multiplicity.BINARY, 3)
+SUB = OperationType("-", Multiplicity.BINARY, 4)
+NEG = OperationType("-", Multiplicity.UNARY, 5)
+MULT = OperationType("*", Multiplicity.BINARY, 6)
+DIV = OperationType("/", Multiplicity.BINARY, 7)
+MOD = OperationType("%", Multiplicity.BINARY, 8)
+ABS = OperationType("|", Multiplicity.UNARY, 9)
+SQRT = OperationType("_/", Multiplicity.UNARY, 10)
+NOP = OperationType("", Multiplicity.UNARY, 11)

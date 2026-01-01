@@ -1,5 +1,5 @@
 from grad.Types import (
-    Condition,
+    Conditions,
     JumpType,
     Multiplicity,
     Operand,
@@ -155,6 +155,8 @@ def _decompress_binary_operation(
     if inst.x.type == OperandType.Constant and inst.y.type == OperandType.Register:
         inst.x, inst.y = inst.y, inst.x
 
+    # to make compiler shut up,
+    # x_reg, y_reg, unravel_reg = inst.x, inst.x, inst.x
     match inst.x.type, inst.y.type:
         case OperandType.Constant, OperandType.Constant:
             if inst.x.value != cur_A:
@@ -196,6 +198,7 @@ def _decompress_binary_operation(
                 instructions.append(
                     AInstruction(inst.line_num, inst.y.value),
                 )
+
                 cur_A = inst.y.value
 
             if inst.x.pointer is None:
@@ -259,7 +262,10 @@ def _decompress_binary_operation(
                             inst.x,
                         )
 
+            # x_reg, y_reg, and unravel_reg are assigned in all cases
+            # noinspection PyUnboundLocalVariable
             instructions.extend(_unravel_index(inst, unravel_reg))
+            # noinspection PyUnboundLocalVariable
             instructions.append(
                 CInstruction(
                     inst.line_num,
@@ -290,6 +296,8 @@ def _decompress_destination_part(
 
     # memory index in dest
     if mem_dest is not None and mem_dest.pointer is not None:
+        # Every decompress step caps the instruction list with a C inst
+        # noinspection PyTypeChecker
         last_inst: CInstruction = instructions[-1]
         last_inst.dest.remove(mem_dest)
         last_inst.dest.add(M_simple_register)
@@ -344,6 +352,8 @@ def _decompress_jmp_condition_part(
     global cur_A
 
     if inst.jmp is not None and inst.jmp.compared.value != "0":
+        # Every decompress step caps the instruction list with a C inst
+        # noinspection PyTypeChecker
         prev_inst: CInstruction = instructions[-1]
         del instructions[-1]
 
@@ -380,6 +390,8 @@ def _decompress_jmp_condition_part(
 
                     x_reg, y_reg = D_register, M_simple_register
 
+        # x_reg and y_reg are assigned to on every path
+        # noinspection PyUnboundLocalVariable
         instructions.append(
             CInstruction(
                 inst.line_num,
@@ -401,11 +413,13 @@ def _decompress_jmp_destination_part(
 ):
     global cur_A
 
+    # Every decompress step caps the instruction list with a C inst
+    # noinspection PyTypeChecker
     prev_inst: CInstruction = instructions[-1]
     prev_jmp = prev_inst.jmp
 
     if inst.jmp.destination != cur_A and inst.jmp.destination is not None:
-        if inst.jmp.condition != Condition.TRUE:
+        if inst.jmp.condition != Conditions.TRUE:
             prev_inst.dest.add(D_register)
 
         if len(prev_inst.dest) > 0:
@@ -424,6 +438,8 @@ def _decompress_jmp_destination_part(
 
         cur_A = prev_jmp.destination
 
+    # guaranteed to be C inst since extend is right above
+    # noinspection PyUnresolvedReferences
     instructions[-1].jmp.destination = None
 
 
@@ -494,6 +510,8 @@ def substitute_jump_labels(
             elif not inst.value.isdigit():
                 raise ValueError
 
+    # no BaseInstruction instances are ever added, and all LabelInstruction instances are removed here
+    # noinspection PyTypeChecker
     return instructions
 
 

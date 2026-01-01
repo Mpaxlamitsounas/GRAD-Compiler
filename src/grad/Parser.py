@@ -1,5 +1,5 @@
 from grad import Context
-from grad.Types import Condition, JumpType, Operand, OperandType, Operation
+from grad.Types import Conditions, JumpType, Operand, OperandType, Operation
 from grad.Types.Instructions import (
     AInstruction,
     BaseInstruction,
@@ -146,19 +146,19 @@ def parse_instructions(
                 match len(jmp):
                     # compatibility case (already parsed)
                     case 0:
-                        jmp = JumpType(Condition.TRUE, constant_operand("0"), None)
+                        jmp = JumpType(Conditions.TRUE, constant_operand("0"), None)
 
                     case 1:
                         jmp = strip_and_filter_all(jmp[0].split())
                         match len(jmp):
                             case 1:
                                 jmp = JumpType(
-                                    Condition.TRUE, constant_operand("0"), jmp[0]
+                                    Conditions.TRUE, constant_operand("0"), jmp[0]
                                 )
 
                             case 2:
                                 jmp = JumpType(
-                                    Condition.get_from_value(jmp[0]),
+                                    Conditions.get_from_value(jmp[0]),
                                     parse_operand(jmp[1]),
                                     None,
                                 )
@@ -171,7 +171,7 @@ def parse_instructions(
                             raise ValueError
 
                         jmp = JumpType(
-                            Condition.get_from_value(jmp_cond),
+                            Conditions.get_from_value(jmp_cond),
                             parse_operand(jmp_oper),
                             jmp_dest,
                         )

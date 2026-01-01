@@ -4,27 +4,15 @@ import sys
 from pathlib import Path
 from sys import argv
 
-from grad import Assembler, Context, Parser, Preprocessor
 from grad import Assembler, Compiler, Context, Parser, Preprocessor
+from grad.Types.Exceptions import ParserException
 from grad.Types.Instructions import AInstruction, CInstruction
 
+# TODO: Error types
+# TODO: All other TODOs
 
-def main():
-    if len(argv) != 3:
-        print(
-            f"""Usage: python compiler.py <functions> <filename>
-Functions:
-    {"a (Assemble)":12} - Assembles specified file
-    {"c (Compile)":12} - Compiles Assemble output or specified file, instructions must be in Simple form"""
-        )
-        return
 
-    # initialise
-    random.seed("E20075")
-    random.shuffle(Context.available_RAM)
-    (Path.cwd() / "Output").mkdir(exist_ok=True)
-    sys.argv[1] = sys.argv[1].upper()
-
+def process_file():
     # preprocess
     file_path: Path = Path(argv[2])
     with open(file_path, "rt", encoding="utf-8") as f:
@@ -49,6 +37,28 @@ Functions:
         instructions = Compiler.compile_instructions(assembled_instructions)
         with open(Path.cwd() / "Output" / (file_path.stem + ".c"), "wb") as f:
             f.writelines(instructions)
+
+
+def main():
+    if len(argv) != 3:
+        print(
+            f"""Usage: python compiler.py <functions> <filename>
+Functions:
+    {"a (Assemble)":12} - Assembles specified file
+    {"c (Compile)":12} - Compiles Assemble output or specified file, instructions must be in Simple form"""
+        )
+        return
+
+    # initialise
+    random.seed("E20075")
+    random.shuffle(Context.available_RAM)
+    (Path.cwd() / "Output").mkdir(exist_ok=True)
+    sys.argv[1] = sys.argv[1].upper()
+
+    try:
+        process_file()
+    except ParserException as e:
+        return
 
 
 if __name__ == "__main__":

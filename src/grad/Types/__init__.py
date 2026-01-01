@@ -27,41 +27,6 @@ class ConditionType:
     bit_repr: int
 
 
-class Condition:
-    FALSE = ConditionType("", 0)
-    GT = ConditionType(">", 1)
-    EQ = ConditionType("==", 2)
-    GE = ConditionType(">=", 3)
-    LT = ConditionType("<", 4)
-    NE = ConditionType("!=", 5)
-    LE = ConditionType("<=", 6)
-    TRUE = ConditionType("", 7)
-
-    @staticmethod
-    def get_from_value(condition: str) -> ConditionType:
-        match condition:
-            case ">":
-                return ConditionType(">", 1)
-
-            case "==":
-                return ConditionType("==", 2)
-
-            case ">=":
-                return ConditionType(">=", 3)
-
-            case "<":
-                return ConditionType("<", 4)
-
-            case "!=":
-                return ConditionType("!=", 5)
-
-            case "<=":
-                return ConditionType("<=", 6)
-
-            case _:
-                return ConditionType("", 0)
-
-
 @dataclass
 class JumpType:
     condition: ConditionType
@@ -72,9 +37,10 @@ class JumpType:
         return JumpType(self.condition, self.compared, self.destination)
 
     def __str__(self):
-        s = "IF " if self.condition != Condition.TRUE else ""
+        # ConditionType("", 7) == Conditions.TRUE
+        s = "IF " if self.condition != ConditionType("", 7) else ""
         s += self.condition.value
-        s += f" {self.compared} " if self.condition != Condition.TRUE else ""
+        s += f" {self.compared} " if self.condition != ConditionType("", 7) else ""
         s += "JMP"
         s += f" {self.destination}" if self.destination is not None else ""
         return s

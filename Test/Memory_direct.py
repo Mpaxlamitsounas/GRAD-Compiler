@@ -1,4 +1,4 @@
-from grad.Types import Condition, JumpType, Operation
+from grad.Types import Conditions, JumpType, Operation
 from grad.Types.Instructions import CInstruction
 from grad.util import D_register, ONE_register
 from Test.util import (
@@ -15,7 +15,7 @@ def run_test_cases():
             v[2],
             Operation.ADD,
             {v[0]},
-            JumpType(Condition.GE, v[3], "0"),
+            JumpType(Conditions.GE, v[3], "0"),
         ),
         "test_memory_direct_only_memory.txt",
     )
@@ -28,7 +28,7 @@ def run_test_cases():
             ONE_register,
             Operation.ADD,
             {v[0]},
-            JumpType(Condition.GE, v[2], "0"),
+            JumpType(Conditions.GE, v[2], "0"),
         ),
         "test_memory_direct_with_register.txt",
     )
@@ -41,7 +41,7 @@ def run_test_cases():
             v[1],
             Operation.ADD,
             {D_register},
-            JumpType(Condition.GE, v[2], "0"),
+            JumpType(Conditions.GE, v[2], "0"),
         ),
         "test_memory_direct_register_dest.txt",
     )
@@ -54,7 +54,7 @@ def run_test_cases():
             None,
             Operation.NOP,
             {v[0]},
-            JumpType(Condition.GE, v[2], "0"),
+            JumpType(Conditions.GE, v[2], "0"),
         ),
         "test_memory_direct_no_y.txt",
     )

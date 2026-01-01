@@ -1,4 +1,4 @@
-from grad.Types import Condition, JumpType, Operation
+from grad.Types import Conditions, JumpType, Operation
 from grad.Types.Instructions import CInstruction
 from grad.util import D_register, ONE_register
 from Test.util import (
@@ -15,7 +15,7 @@ def run_test_cases():
             v[1],
             Operation.ADD,
             {D_register},
-            JumpType(Condition.GE, v[2], v[3].value),
+            JumpType(Conditions.GE, v[2], v[3].value),
         ),
         "test_constants_only_constants.txt",
     )
@@ -28,7 +28,7 @@ def run_test_cases():
             ONE_register,
             Operation.ADD,
             {D_register},
-            JumpType(Condition.GE, v[1], v[2].value),
+            JumpType(Conditions.GE, v[1], v[2].value),
         ),
         "test_constants_with_register.txt",
     )
@@ -41,7 +41,7 @@ def run_test_cases():
             None,
             Operation.NOP,
             {D_register},
-            JumpType(Condition.GE, v[1], v[2].value),
+            JumpType(Conditions.GE, v[1], v[2].value),
         ),
         "test_constants_no_y.txt",
     )
