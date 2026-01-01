@@ -12,7 +12,15 @@ from grad.Types.Instructions import (
     CInstruction,
     LabelInstruction,
 )
-from grad.util import A_register, D_register, M_register, constant_operand
+from grad.util import (
+    A_register,
+    D_register,
+    M_simple_register,
+    ONE_register,
+    TWO_register,
+    constant_operand,
+    is_M_register,
+)
 
 cur_A: int | None = None
 
@@ -27,17 +35,17 @@ def decompress_A_instruction(inst: AInstruction) -> list[BaseInstruction]:
 def check_inst_validity(inst: CInstruction) -> tuple[bool, str]:
     if any(
         [
-            d.type == OperandType.Constant or d.value == "1" or d.value == "2"
+            d.type == OperandType.Constant or d == ONE_register or d == TWO_register
             for d in inst.dest
         ]
     ):
         return False, "ERROR Can only assign to registers A, M, or D."
 
-    if len([dest for dest in inst.dest if dest.value == "M"]) > 1:
+    if len([d for d in inst.dest if is_M_register(d)]) > 1:
         return False, "ERROR Can output to at most one memory location at a time."
 
-    if any([A_register() == inst.x, A_register() == inst.y]) and any(
-        [inst.x.value == "M", inst.y is not None and inst.y.value == "M"]
+    if any([A_register == inst.x, A_register == inst.y]) and any(
+        [is_M_register(inst.x), inst.y is not None and is_M_register(inst.y)]
     ):
         return False, "ERROR Can not utilise A register and memory at the same time."
 
@@ -47,12 +55,9 @@ def check_inst_validity(inst: CInstruction) -> tuple[bool, str]:
 def calc_req_A(op: Operand) -> str:
     cur = op.pointer
     loops: int = 0
-    try:
-        while cur.pointer is not None:
-            cur = cur.pointer
-            loops += 1
-    except AttributeError:
-        raise AttributeError
+    while cur.pointer is not None:
+        cur = cur.pointer
+        loops += 1
 
     return "M[" * loops + cur.value + "]" * loops if loops > 0 else cur.value
 
@@ -65,22 +70,18 @@ def _unravel_index(inst: CInstruction, op: Operand) -> list[BaseInstruction]:
 
     cur = op.pointer
     loops: int = 0
-    try:
-        while cur.pointer is not None:
-            unraveled_instructions.append(
-                CInstruction(
-                    inst.line_num,
-                    M_register(None),
-                    None,
-                    Operation.NOP,
-                    {A_register()},
-                ),
-            )
-            cur = cur.pointer
-            loops += 1
-
-    except AttributeError:
-        raise AttributeError
+    while cur.pointer is not None:
+        unraveled_instructions.append(
+            CInstruction(
+                inst.line_num,
+                M_simple_register,
+                None,
+                Operation.NOP,
+                {A_register},
+            ),
+        )
+        cur = cur.pointer
+        loops += 1
 
     if loops > 0:
         cur_A = "M[" * loops + cur.value + "]" * loops
@@ -111,30 +112,28 @@ def _decompress_unary_operation(
 
             instructions.append(
                 CInstruction(
-                    inst.line_num, A_register(), None, inst.op, inst.dest, inst.jmp
+                    inst.line_num, A_register, None, inst.op, inst.dest, inst.jmp
                 )
             )
 
         case OperandType.Register:
             if inst.x.pointer is None:
-                instructions.append(
-                    CInstruction(
-                        inst.line_num, inst.x, None, inst.op, inst.dest, inst.jmp
-                    )
-                )
+                x_reg = inst.x
 
             else:
+                x_reg = M_simple_register
                 instructions.extend(_unravel_index(inst, inst.x))
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        M_register(None),
-                        None,
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
+
+            instructions.append(
+                CInstruction(
+                    inst.line_num,
+                    x_reg,
+                    None,
+                    inst.op,
+                    inst.dest,
+                    inst.jmp,
                 )
+            )
 
 
 def _decompress_binary_operation(
@@ -143,14 +142,18 @@ def _decompress_binary_operation(
     global cur_A
 
     # instruction has already been decompressed
-    if (
-        inst.x.type == OperandType.Register
-        and inst.x.pointer is None
-        and inst.y.type == OperandType.Register
-        and inst.y.pointer is None
+    if all(
+        [
+            all([reg.type == OperandType.Register, reg.pointer is None])
+            for reg in [inst.x, inst.y]
+        ]
     ):
         instructions.append(inst)
         return
+
+    # Constant, Register and Register, Constant are symmetric
+    if inst.x.type == OperandType.Constant and inst.y.type == OperandType.Register:
+        inst.x, inst.y = inst.y, inst.x
 
     match inst.x.type, inst.y.type:
         case OperandType.Constant, OperandType.Constant:
@@ -158,90 +161,35 @@ def _decompress_binary_operation(
                 instructions.append(AInstruction(inst.line_num, inst.x.value))
 
             if inst.x.value != inst.y.value:
+                x_reg = D_register
                 instructions.extend(
                     [
                         CInstruction(
                             inst.line_num,
-                            A_register(),
+                            A_register,
                             None,
                             Operation.NOP,
-                            {D_register()},
+                            {D_register},
                         ),
                         AInstruction(inst.line_num, inst.y.value),
-                        CInstruction(
-                            inst.line_num,
-                            D_register(),
-                            A_register(),
-                            inst.op,
-                            inst.dest,
-                            inst.jmp,
-                        ),
                     ]
                 )
 
             else:
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        A_register(),
-                        A_register(),
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
+                x_reg = A_register
+
+            instructions.append(
+                CInstruction(
+                    inst.line_num,
+                    x_reg,
+                    A_register,
+                    inst.op,
+                    inst.dest,
+                    inst.jmp,
                 )
+            )
 
             cur_A = inst.y.value
-
-        case OperandType.Constant, OperandType.Register:
-            if inst.x.value != cur_A:
-                instructions.append(
-                    AInstruction(inst.line_num, inst.x.value),
-                )
-                cur_A = inst.x.value
-
-            if inst.y.pointer is None:
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        A_register(),
-                        inst.y,
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
-                )
-
-            elif cur_A != calc_req_A(inst.y):
-                instructions.append(
-                    CInstruction(
-                        inst.line_num, A_register(), None, Operation.NOP, {D_register()}
-                    )
-                )
-
-                instructions.extend(_unravel_index(inst, inst.y))
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        D_register(),
-                        M_register(None),
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
-                )
-
-            else:
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        A_register(),
-                        M_register(None),
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
-                )
 
         case OperandType.Register, OperandType.Constant:
             if inst.y.value != cur_A:
@@ -251,75 +199,39 @@ def _decompress_binary_operation(
                 cur_A = inst.y.value
 
             if inst.x.pointer is None:
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        inst.x,
-                        A_register(),
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
-                )
+                x_reg, y_reg = inst.x, A_register
 
-            elif cur_A != calc_req_A(inst.x):
+            elif cur_A == calc_req_A(inst.x):
+                x_reg, y_reg = M_simple_register, A_register
+
+            else:
+                x_reg, y_reg = M_simple_register, D_register
                 instructions.append(
                     CInstruction(
-                        inst.line_num, A_register(), None, Operation.NOP, {D_register()}
+                        inst.line_num, A_register, None, Operation.NOP, {D_register}
                     )
                 )
 
                 instructions.extend(_unravel_index(inst, inst.x))
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        M_register(None),
-                        D_register(),
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
-                )
 
-            else:
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        M_register(None),
-                        A_register(),
-                        inst.op,
-                        inst.dest,
-                        inst.jmp,
-                    )
+            instructions.append(
+                CInstruction(
+                    inst.line_num,
+                    x_reg,
+                    y_reg,
+                    inst.op,
+                    inst.dest,
+                    inst.jmp,
                 )
+            )
 
         case OperandType.Register, OperandType.Register:
             match inst.x.pointer, inst.y.pointer:
                 case _, None:
-                    instructions.extend(_unravel_index(inst, inst.x))
-                    instructions.append(
-                        CInstruction(
-                            inst.line_num,
-                            M_register(None),
-                            inst.y,
-                            inst.op,
-                            inst.dest,
-                            inst.jmp,
-                        )
-                    )
+                    x_reg, y_reg, unravel_reg = M_simple_register, inst.y, inst.x
 
                 case None, _:
-                    instructions.extend(_unravel_index(inst, inst.y))
-                    instructions.append(
-                        CInstruction(
-                            inst.line_num,
-                            inst.x,
-                            M_register(None),
-                            inst.op,
-                            inst.dest,
-                            inst.jmp,
-                        )
-                    )
+                    x_reg, y_reg, unravel_reg = inst.x, M_simple_register, inst.y
 
                 case _, _:
                     if inst.x.pointer != inst.y.pointer:
@@ -327,37 +239,37 @@ def _decompress_binary_operation(
                         instructions.append(
                             CInstruction(
                                 inst.line_num,
-                                M_register(None),
+                                M_simple_register,
                                 None,
                                 Operation.NOP,
-                                {D_register()},
+                                {D_register},
                             )
                         )
 
-                        instructions.extend(_unravel_index(inst, inst.y))
-                        instructions.append(
-                            CInstruction(
-                                inst.line_num,
-                                D_register(),
-                                M_register(None),
-                                inst.op,
-                                inst.dest,
-                                inst.jmp,
-                            )
+                        x_reg, y_reg, unravel_reg = (
+                            D_register,
+                            M_simple_register,
+                            inst.y,
                         )
 
                     else:
-                        instructions.extend(_unravel_index(inst, inst.x))
-                        instructions.append(
-                            CInstruction(
-                                inst.line_num,
-                                M_register(None),
-                                M_register(None),
-                                inst.op,
-                                inst.dest,
-                                inst.jmp,
-                            )
+                        x_reg, y_reg, unravel_reg = (
+                            M_simple_register,
+                            M_simple_register,
+                            inst.x,
                         )
+
+            instructions.extend(_unravel_index(inst, unravel_reg))
+            instructions.append(
+                CInstruction(
+                    inst.line_num,
+                    x_reg,
+                    y_reg,
+                    inst.op,
+                    inst.dest,
+                    inst.jmp,
+                )
+            )
 
 
 def _decompress_operation_part(inst: CInstruction, instructions: list[BaseInstruction]):
@@ -372,37 +284,27 @@ def _decompress_destination_part(
 ):
     global cur_A
 
-    mem_dests: list[Operand] = [d for d in inst.dest if d.value == "M"]
+    mem_dests: list[Operand] = [d for d in inst.dest if is_M_register(d)]
+    # guaranteed to be only 1 from previous check
     mem_dest: Operand = mem_dests[0] if len(mem_dests) != 0 else None
 
     # memory index in dest
     if mem_dest is not None and mem_dest.pointer is not None:
         last_inst: CInstruction = instructions[-1]
         last_inst.dest.remove(mem_dest)
-        last_inst.dest.add(M_register(None))
+        last_inst.dest.add(M_simple_register)
 
         if cur_A != calc_req_A(mem_dest):
             del instructions[-1]
-            if (
-                inst.x.value == "M"
-                or inst.x.value == "A"
-                or inst.x.type == OperandType.Constant
-                or (
-                    inst.y is not None
-                    and (
-                        inst.y.value == "M"
-                        or inst.y.value == "A"
-                        or inst.y.type == OperandType.Constant
-                    )
-                )
-            ):
+            # inst utilises A or M registers in computation
+            if any(any([is_M_register(reg), reg == A_register, reg.type == OperandType.Constant]) for reg in [inst.x, inst.y] if reg is not None):
                 instructions.append(
                     CInstruction(
                         inst.line_num,
                         last_inst.x,
                         last_inst.y,
                         last_inst.op,
-                        {D_register()},
+                        {D_register},
                     )
                 )
 
@@ -410,7 +312,7 @@ def _decompress_destination_part(
                 instructions.append(
                     CInstruction(
                         inst.line_num,
-                        D_register(),
+                        D_register,
                         None,
                         Operation.NOP,
                         last_inst.dest,
@@ -422,7 +324,7 @@ def _decompress_destination_part(
                 instructions.extend(_unravel_index(inst, mem_dest))
                 instructions.append(last_inst)
 
-    if A_register() in inst.dest:
+    if A_register in inst.dest:
         cur_A = None
 
 
@@ -436,7 +338,7 @@ def _decompress_jmp_condition_part(
         del instructions[-1]
 
         if len(prev_inst.dest) != 0:
-            prev_inst.dest.add(D_register())
+            prev_inst.dest.add(D_register)
 
             instructions.append(
                 CInstruction(
@@ -456,56 +358,32 @@ def _decompress_jmp_condition_part(
                     )
                     cur_A = inst.jmp.compared.value
 
-                instructions.append(
-                    CInstruction(
-                        inst.line_num,
-                        D_register(),
-                        A_register(),
-                        Operation.SUB,
-                        set(),
-                        JumpType(
-                            prev_inst.jmp.condition,
-                            constant_operand("0"),
-                            prev_inst.jmp.destination,
-                        ),
-                    )
-                )
+                x_reg, y_reg = D_register, A_register
 
             case OperandType.Register:
                 if inst.jmp.compared.pointer is None:
-                    instructions.append(
-                        CInstruction(
-                            inst.line_num,
-                            D_register(),
-                            inst.jmp.compared,
-                            Operation.SUB,
-                            set(),
-                            JumpType(
-                                prev_inst.jmp.condition,
-                                constant_operand("0"),
-                                prev_inst.jmp.destination,
-                            ),
-                        )
-                    )
+                    x_reg, y_reg = D_register, inst.jmp.compared
 
                 else:
                     if cur_A != calc_req_A(prev_inst.jmp.compared):
                         instructions.extend(_unravel_index(inst, inst.jmp.compared))
 
-                    instructions.append(
-                        CInstruction(
-                            inst.line_num,
-                            D_register(),
-                            M_register(None),
-                            Operation.SUB,
-                            set(),
-                            JumpType(
-                                prev_inst.jmp.condition,
-                                constant_operand("0"),
-                                prev_inst.jmp.destination,
-                            ),
-                        )
-                    )
+                    x_reg, y_reg = D_register, M_simple_register
+
+        instructions.append(
+            CInstruction(
+                inst.line_num,
+                x_reg,
+                y_reg,
+                Operation.SUB,
+                set(),
+                JumpType(
+                    prev_inst.jmp.condition,
+                    constant_operand("0"),
+                    prev_inst.jmp.destination,
+                ),
+            )
+        )
 
 
 def _decompress_jmp_destination_part(
@@ -518,7 +396,7 @@ def _decompress_jmp_destination_part(
 
     if inst.jmp.destination != cur_A and inst.jmp.destination is not None:
         if inst.jmp.condition != Condition.TRUE:
-            prev_inst.dest.add(D_register())
+            prev_inst.dest.add(D_register)
 
         if len(prev_inst.dest) > 0:
             prev_inst.jmp = None
@@ -529,10 +407,11 @@ def _decompress_jmp_destination_part(
             [
                 AInstruction(inst.line_num, prev_jmp.destination),
                 CInstruction(
-                    inst.line_num, D_register(), None, Operation.NOP, set(), prev_jmp
+                    inst.line_num, D_register, None, Operation.NOP, set(), prev_jmp
                 ),
             ]
         )
+
         cur_A = prev_jmp.destination
 
     instructions[-1].jmp.destination = None
@@ -588,7 +467,7 @@ def decompress_instructions(
 
 def substitute_jump_labels(
     instructions: list[BaseInstruction],
-) -> list[BaseInstruction]:
+) -> list[AInstruction | CInstruction]:
     labels: dict[str, str] = {}
     cnt = 0
     for idx, inst in enumerate(instructions.copy()):
@@ -631,11 +510,15 @@ def _optimise_C_inst_dest_merge(
                 ]
             )  # no memory dependencies
             and (
-                A_register() not in prev_inst.dest
+                A_register not in prev_inst.dest
                 or (
-                    cur_inst.x.value != "M"
-                    and (cur_inst.y.value != "M" if cur_inst.y is not None else True)
-                    and all([d.value != "M" for d in cur_inst.dest])
+                    not is_M_register(cur_inst.x)
+                    and (
+                        not is_M_register(cur_inst.y)
+                        if cur_inst.y is not None
+                        else True
+                    )
+                    and all([not is_M_register(d) for d in cur_inst.dest])
                 )
             )
         ):
@@ -663,20 +546,20 @@ def _optimise_C_inst_redundant_A_assign_make_inline(
             and isinstance(cur_inst, CInstruction)
             and all(
                 [
-                    prev_inst.x == A_register(),
+                    prev_inst.x == A_register,
                     prev_inst.op == Operation.NOP,
                     prev_inst.jmp is None,
-                    prev_inst.dest == {D_register()},
+                    prev_inst.dest == {D_register},
                     cur_inst.op != Operation.NOP,
-                    cur_inst.x == D_register() or cur_inst.y == D_register(),
+                    cur_inst.x == D_register or cur_inst.y == D_register,
                 ]
             )
         ):
             del optim_instructions[-1]
-            if cur_inst.x == D_register():
-                cur_inst.x = A_register()
+            if cur_inst.x == D_register:
+                cur_inst.x = A_register
             else:
-                cur_inst.y = A_register()
+                cur_inst.y = A_register
 
         optim_instructions.append(cur_inst)
         prev_inst = cur_inst
@@ -735,7 +618,9 @@ def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruc
     return instructions
 
 
-def run_full_pipeline(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
+def assemble_instructions(
+    instructions: list[BaseInstruction],
+) -> list[AInstruction | CInstruction]:
     instructions = decompress_instructions(instructions)
     instructions = apply_optimisations(instructions)
     instructions = substitute_jump_labels(instructions)
