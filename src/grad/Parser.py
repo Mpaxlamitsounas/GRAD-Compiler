@@ -9,7 +9,7 @@ from grad.Types.Instructions import (
     CInstruction,
     LabelInstruction,
 )
-from grad.util import constant_operand, strip_and_filter_all
+from grad.util import constant_operand, strip_and_filter_all, is_valid_identifier_name
 
 line_num: int = 0
 cur_line: str = ""
@@ -19,11 +19,11 @@ def parse_operand(operand: str) -> Operand:
     if (operand := operand.strip()) == "":
         raise ParserException(line_num, cur_line, "Tried to parse empty operand.")
 
-    if not operand.isalnum() and not operand.startswith("M["):
+    if not is_valid_identifier_name(operand) and not operand.startswith("M["):
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifiers must be alphanumeric ("{operand}" is not).',
+            f'Identifier "{operand}" contains disallowed characters (charset is [a-zA-Z_]).'
         )
 
     if operand in Context.reserved:
@@ -52,6 +52,11 @@ def parse_A_instruction(line: str) -> AInstruction:
             line_num, cur_line, "A instruction must have non-empty value."
         )
 
+    if not is_valid_identifier_name(value):
+        raise ParserException(
+            line_num, cur_line, f'Identifier "{value}" contains disallowed characters (charset is [a-zA-Z_]).',
+        )
+
     return AInstruction(line_num, value)
 
 
@@ -64,6 +69,11 @@ def parse_alias(line: str) -> None:
             f'Alias declaration missing name or value, or has too many ":" (NAME:VALUE).',
         )
 
+    if not is_valid_identifier_name(split[0]):
+        raise ParserException(
+            line_num, cur_line, f'Identifier "{split[0]}" contains disallowed characters (charset is [a-zA-Z_]).',
+        )
+
     Context.symbols[split[0]] = split[1]
 
 
@@ -74,6 +84,11 @@ def parse_jump_label(line: str) -> LabelInstruction:
             line_num, cur_line, "Jump labels must have non-empty name."
         )
 
+    if not is_valid_identifier_name(name):
+        raise ParserException(
+            line_num, cur_line, f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
+        )
+
     return LabelInstruction(line_num, name)
 
 
@@ -82,6 +97,11 @@ def parse_variable(line: str) -> None:
     if line == "":
         raise ParserException(
             line_num, cur_line, "Variable declarations must have non-empty name."
+        )
+
+    if not is_valid_identifier_name(name):
+        raise ParserException(
+            line_num, cur_line, f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
         )
 
     Context.symbols[name] = f"M[{Context.available_RAM.pop()}]"

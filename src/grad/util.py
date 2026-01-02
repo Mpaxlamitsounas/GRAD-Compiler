@@ -22,3 +22,7 @@ def is_M_register(op: Operand) -> bool:
 
 def constant_operand(value: str) -> Operand:
     return Operand(OperandType.Constant, value)
+
+
+def is_valid_identifier_name(identifier: str) -> bool:
+    return all([c.isalnum() or c == "_" for c in identifier])
