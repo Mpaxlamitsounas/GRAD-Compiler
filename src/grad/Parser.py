@@ -20,13 +20,17 @@ def parse_operand(operand: str) -> Operand:
         raise ParserException(line_num, cur_line, "Tried to parse empty operand.")
 
     if operand[0] == "-":
-        raise ParserException(line_num, cur_line, "Values must be non negative, to introduce a negative value, use a NEG C instruction.")
+        raise ParserException(
+            line_num,
+            cur_line,
+            "Values must be non negative, to introduce a negative value, use a NEG C instruction.",
+        )
 
     if not is_valid_identifier_name(operand) and not operand.startswith("M["):
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{operand}" contains disallowed characters (charset is [a-zA-Z_]).',
+            f'Identifier "{operand}" contains disallowed characters (charset is [A-Z_]).',
         )
 
     if operand in Context.reserved:
@@ -59,7 +63,7 @@ def parse_A_instruction(line: str) -> AInstruction:
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{value}" contains disallowed characters (charset is [a-zA-Z_]).',
+            f'Identifier "{value}" contains disallowed characters (charset is [A-Z_]).',
         )
 
     return AInstruction(line_num, value)
@@ -74,12 +78,13 @@ def parse_alias(line: str) -> None:
             f'Alias declaration missing name or value, or has too many ":" (NAME:VALUE).',
         )
 
-    if not is_valid_identifier_name(split[0]):
-        raise ParserException(
-            line_num,
-            cur_line,
-            f'Identifier "{split[0]}" contains disallowed characters (charset is [a-zA-Z_]).',
-        )
+    for name in split:
+        if not is_valid_identifier_name(name):
+            raise ParserException(
+                line_num,
+                cur_line,
+                f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
+            )
 
     Context.symbols[split[0]] = split[1]
 
@@ -95,7 +100,7 @@ def parse_jump_label(line: str) -> LabelInstruction:
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
+            f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
         )
 
     return LabelInstruction(line_num, name)
@@ -112,7 +117,7 @@ def parse_variable(line: str) -> None:
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
+            f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
         )
 
     Context.symbols[name] = f"M[{Context.available_RAM.pop()}]"
