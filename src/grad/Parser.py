@@ -19,6 +19,9 @@ def parse_operand(operand: str) -> Operand:
     if (operand := operand.strip()) == "":
         raise ParserException(line_num, cur_line, "Tried to parse empty operand.")
 
+    if operand[0] == "-":
+        raise ParserException(line_num, cur_line, "Values must be non negative, to introduce a negative value, use a NEG C instruction.")
+
     if not is_valid_identifier_name(operand) and not operand.startswith("M["):
         raise ParserException(
             line_num,
