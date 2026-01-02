@@ -158,12 +158,6 @@ def _decompress_binary_operation(
         instructions.append(inst)
         return
 
-    # Constant, Register and Register, Constant are symmetric
-    if inst.x.type == OperandType.Constant and inst.y.type == OperandType.Register:
-        inst.x, inst.y = inst.y, inst.x
-
-    # to make compiler shut up,
-    # x_reg, y_reg, unravel_reg = inst.x, inst.x, inst.x
     match inst.x.type, inst.y.type:
         case OperandType.Constant, OperandType.Constant:
             if inst.x.value != cur_A:
@@ -223,6 +217,42 @@ def _decompress_binary_operation(
                 )
 
                 instructions.extend(_unravel_index(inst, inst.x))
+
+            instructions.append(
+                CInstruction(
+                    inst.line_num,
+                    x_reg,
+                    y_reg,
+                    inst.op,
+                    inst.dest,
+                    inst.jmp,
+                )
+            )
+
+        # most operations are commutative, but NEG is not, so this is needed
+        case OperandType.Constant, OperandType.Register:
+            if inst.x.value != cur_A:
+                instructions.append(
+                    AInstruction(inst.line_num, inst.x.value),
+                )
+
+                cur_A = inst.x.value
+
+            if inst.y.pointer is None:
+                x_reg, y_reg = A_register, inst.y
+
+            elif cur_A == calc_req_A(inst.y):
+                x_reg, y_reg = A_register, M_simple_register
+
+            else:
+                x_reg, y_reg = D_register, M_simple_register
+                instructions.append(
+                    CInstruction(
+                        inst.line_num, A_register, None, Operation.NOP, {D_register}
+                    )
+                )
+
+                instructions.extend(_unravel_index(inst, inst.y))
 
             instructions.append(
                 CInstruction(
