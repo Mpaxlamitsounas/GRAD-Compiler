@@ -5,7 +5,7 @@ from pathlib import Path
 from sys import argv
 from types import FrameType, TracebackType
 
-from grad import Assembler, Compiler, Context, Parser, Preprocessor
+from grad import Assembler, Compiler, Context, Options, Parser, Preprocessor
 from grad.Types.Exceptions import (
     AssemblerException,
     CompilerException,
@@ -13,6 +13,14 @@ from grad.Types.Exceptions import (
     ParserException,
 )
 from grad.Types.Instructions import AInstruction, CInstruction
+
+
+def initialise():
+    if Options.shuffle_memory:
+        random.seed("E20075")
+        random.shuffle(Context.available_memory)
+    (Path.cwd() / "Output").mkdir(exist_ok=True)
+    sys.argv[1] = sys.argv[1].upper()
 
 
 def process_file():
@@ -73,11 +81,7 @@ Functions:
         )
         return
 
-    # initialise
-    random.seed("E20075")
-    random.shuffle(Context.available_RAM)
-    (Path.cwd() / "Output").mkdir(exist_ok=True)
-    sys.argv[1] = sys.argv[1].upper()
+    initialise()
 
     try:
         process_file()
