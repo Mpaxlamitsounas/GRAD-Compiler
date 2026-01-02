@@ -1,10 +1,8 @@
 #!./bin/python3
 import random
 import sys
-from os import wait
 from pathlib import Path
 from sys import argv
-from time import sleep
 from types import FrameType, TracebackType
 
 from grad import Assembler, Compiler, Context, Options, Parser, Preprocessor
@@ -114,7 +112,7 @@ Functions:
             break
 
         except FileNotFoundError:
-            print(f"Could not find file \"{file}\", continuing to next file.")
+            print(f'Could not find file "{file}", continuing to next file.')
 
         except Exception as e:
             frame = get_last_frame(e.__traceback__)
