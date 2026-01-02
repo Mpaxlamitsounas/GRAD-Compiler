@@ -1,11 +1,14 @@
 #!./bin/python3
 import random
 import sys
+from os import wait
 from pathlib import Path
 from sys import argv
+from time import sleep
 from types import FrameType, TracebackType
 
 from grad import Assembler, Compiler, Context, Options, Parser, Preprocessor
+from grad.Context import default_symbols
 from grad.Types.Exceptions import (
     AssemblerException,
     CompilerException,
@@ -16,16 +19,24 @@ from grad.Types.Instructions import AInstruction, CInstruction
 
 
 def initialise():
-    if Options.shuffle_memory:
-        random.seed("E20075")
-        random.shuffle(Context.available_memory)
+    random.seed("E20075")
     (Path.cwd() / "Output").mkdir(exist_ok=True)
     sys.argv[1] = sys.argv[1].upper()
 
 
-def process_file():
+def reset():
+    Assembler.cur_A = None
+    Parser.line_num = 0
+    Parser.cur_line = ""
+    Context.symbols = default_symbols.copy()
+
+    if Options.shuffle_memory:
+        random.shuffle(Context.available_memory)
+
+
+def process_file(file: str):
     # preprocess
-    file_path: Path = Path(argv[2])
+    file_path: Path = Path(file)
     with open(file_path, "rt", encoding="utf-8") as f:
         lines = Preprocessor.process_lines(f.read())
 
@@ -61,10 +72,10 @@ def get_last_frame(traceback: TracebackType) -> FrameType:
     return frame.tb_frame
 
 
-def format_exception(verb: str, e: GradException) -> str:
+def format_exception(verb: str, file: str, e: GradException) -> str:
     frame = get_last_frame(e.__traceback__)
 
-    return f"""Encountered an error while {verb} line {e.line_num}
+    return f"""Encountered an error on line {e.line_num} while {verb} file \"{file}\", continuing to next file.
     Line content: {e.line}
     Error message: {e.message}
     Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\"
@@ -72,9 +83,9 @@ def format_exception(verb: str, e: GradException) -> str:
 
 
 def main():
-    if len(argv) != 3:
+    if len(argv) < 3:
         print(
-            f"""Usage: python compiler.py <functions> <filename>
+            f"""Usage: python compiler.py <functions> <filename> [<filename>...]
 Functions:
     {"a (Assemble)":12} - Assembles specified file
     {"c (Compile)":12} - Compiles Assemble output or specified file, instructions must be in Simple form"""
@@ -83,17 +94,35 @@ Functions:
 
     initialise()
 
-    try:
-        process_file()
+    for file in argv[2:]:
+        reset()
 
-    except ParserException as e:
-        print(format_exception("parsing", e))
+        try:
+            process_file(file)
 
-    except AssemblerException as e:
-        print(format_exception("assembling", e))
+        except ParserException as e:
+            print(format_exception("parsing", file, e))
 
-    except CompilerException as e:
-        print(format_exception("compiling", e))
+        except AssemblerException as e:
+            print(format_exception("assembling", file, e))
+
+        except CompilerException as e:
+            print(format_exception("compiling", file, e))
+
+        except KeyboardInterrupt:
+            print("Received interrupt, exiting.")
+            break
+
+        except FileNotFoundError:
+            print(f"Could not find file \"{file}\", continuing to next file.")
+
+        except Exception as e:
+            frame = get_last_frame(e.__traceback__)
+
+            print(
+                f"""Caught unhandled exception while processing file \"{file}\", continuing to next file.
+    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\" and is of type \"{str(type(e))[8:-2]}\""""
+            )
 
 
 if __name__ == "__main__":
