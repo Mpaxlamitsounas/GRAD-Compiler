@@ -474,6 +474,13 @@ def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
     return instructions
 
 
+def decompress_Label_instruction(instruction: LabelInstruction) -> list[BaseInstruction]:
+    global cur_A
+
+    cur_A = None
+    return [instruction.copy()]
+
+
 def decompress_instruction(instruction: BaseInstruction) -> list[BaseInstruction]:
     if isinstance(instruction, AInstruction):
         return decompress_A_instruction(instruction)
@@ -482,7 +489,8 @@ def decompress_instruction(instruction: BaseInstruction) -> list[BaseInstruction
         return decompress_C_instruction(instruction)
 
     elif isinstance(instruction, LabelInstruction):
-        return [instruction.copy()]
+        return decompress_Label_instruction(instruction)
+
 
     else:
         return []
