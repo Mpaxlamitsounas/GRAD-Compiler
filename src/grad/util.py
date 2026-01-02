@@ -25,4 +25,11 @@ def constant_operand(value: str) -> Operand:
 
 
 def is_valid_identifier_name(identifier: str) -> bool:
-    return all([c.isalnum() or c == "_" for c in identifier])
+    if identifier == "":
+        return False
+
+    is_valid = all([c.isalnum() or c == "_" for c in identifier])
+    if not is_valid:
+        is_valid = is_valid_identifier_name(identifier[2:-1])
+
+    return is_valid
