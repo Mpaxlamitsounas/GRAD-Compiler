@@ -26,7 +26,7 @@ def parse_operand(operand: str) -> Operand:
             "Values must be non negative, to introduce a negative value, use a NEG C instruction.",
         )
 
-    if not is_valid_identifier_name(operand) and not operand.startswith("M["):
+    if not is_valid_identifier_name(operand):
         raise ParserException(
             line_num,
             cur_line,
@@ -120,7 +120,7 @@ def parse_variable(line: str) -> None:
             f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
         )
 
-    Context.symbols[name] = f"M[{Context.available_RAM.pop()}]"
+    Context.symbols[name] = f"M[{Context.available_memory.pop()}]"
 
 
 def parse_C_instruction(line: str) -> CInstruction:
@@ -134,7 +134,6 @@ def parse_C_instruction(line: str) -> CInstruction:
     # operation ; jmp
     if ";" in rest:
         operation_str, jmp = rest.split(";")
-        jmp = jmp.replace("IF", "")
 
     else:
         jmp = None
@@ -207,6 +206,7 @@ def parse_C_instruction(line: str) -> CInstruction:
 
             case 1:
                 jmp = strip_and_filter_all(jmp[0].split())
+
                 match len(jmp):
                     case 1:
                         jmp = JumpType(
@@ -220,6 +220,7 @@ def parse_C_instruction(line: str) -> CInstruction:
                         )
 
                     case 2:
+                        jmp[0] = jmp[0].replace("IF", "").strip()
                         jmp = JumpType(
                             Conditions.get_from_value(jmp[0]),
                             parse_operand(jmp[1]),
@@ -227,11 +228,13 @@ def parse_C_instruction(line: str) -> CInstruction:
                         )
 
             case 2:
+                jmp[0] = jmp[0].replace("IF", "").strip()
                 jmp_dest = (
                     jmp[1] if jmp[1] not in Context.symbols else Context.symbols[jmp[1]]
                 )
                 try:
                     jmp_cond, jmp_oper = strip_and_filter_all(jmp[0].split())
+
                 except:
                     raise ParserException(
                         line_num, cur_line, "Failed to parse jump condition."
