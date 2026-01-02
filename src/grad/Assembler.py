@@ -472,8 +472,8 @@ def _decompress_jmp_destination_part(
 
 
 def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
-    if inst.dest is None and inst.jmp is None:
-        print(f"Skipping instruction with no effect {inst}.")
+    if len(inst.dest) == 0 and inst.jmp is None:
+        print(f'Skipping instruction with no effect "{inst}".')
         return []
 
     is_valid, err_msg = check_inst_validity(inst)
