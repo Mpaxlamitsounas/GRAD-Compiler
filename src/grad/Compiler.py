@@ -46,8 +46,17 @@ def compile_C_instruction(inst: CInstruction) -> bytes:
     # flag bit
     value = 0x8000
 
+    if any([reg == A_register for reg in [inst.x, inst.y]]) and any(
+        [is_M_register(reg) for reg in [inst.x, inst.y]]
+    ):
+        raise CompilerException(
+            inst.line_num,
+            str(inst),
+            "Can not utilise A register and memory at the same time.",
+        )
+
     # memory bit
-    value |= 0x4000 if not any([inst.x == A_register, inst.y == A_register]) else 0x0000
+    value |= 0x4000 if any([is_M_register(inst.x), is_M_register(inst.y)]) else 0x0000
 
     # inputs selection
     shift = 0
