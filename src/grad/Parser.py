@@ -1,7 +1,7 @@
 from typing import TextIO
 
 from grad import Context
-from grad.Types import Conditions, JumpType, Operand, OperandType, Operation
+from grad.Types import Conditions, JumpType, Operand, OperandType, Operations
 from grad.Types.Exceptions import ParserException
 from grad.Types.Instructions import (
     AInstruction,
@@ -134,36 +134,39 @@ def parse_C_instruction(line: str) -> CInstruction:
 
     # operand operation operand
     if "&" in operation_str:
-        operation = Operation.AND
+        operation = Operations.AND
 
     elif "|" in operation_str:
         parts = strip_and_filter_all(operation_str.split("|"))
-        operation = Operation.OR if len(parts) == 2 else Operation.ABS
+        operation = Operations.OR if len(parts) == 2 else Operations.ABS
 
     elif "~" in operation_str:
-        operation = Operation.NOT
+        operation = Operations.NOT
 
     elif "+" in operation_str:
-        operation = Operation.ADD
+        operation = Operations.ADD
 
     elif "-" in operation_str:
         parts = strip_and_filter_all(operation_str.split("-"))
-        operation = Operation.SUB if len(parts) == 2 else Operation.NEG
+        operation = Operations.SUB if len(parts) == 2 else Operations.NEG
 
     elif "*" in operation_str:
-        operation = Operation.MULT
+        operation = Operations.MULT
 
     elif "/" in operation_str and "_" not in operation_str:
-        operation = Operation.DIV
+        operation = Operations.DIV
 
     elif "%" in operation_str:
-        operation = Operation.MOD
+        operation = Operations.MOD
 
     elif "_/" in operation_str:
-        operation = Operation.SQRT
+        operation = Operations.SQRT
+
+    elif "^" in operation_str:
+        operation = Operations.XOR
 
     else:
-        operation = Operation.NOP
+        operation = Operations.NOP
 
     try:
         operands = strip_and_filter_all(operation_str.split(operation.symbol))

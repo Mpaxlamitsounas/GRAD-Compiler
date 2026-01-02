@@ -1,5 +1,5 @@
 from grad import Assembler
-from grad.Types import Conditions, JumpType, Operand, OperandType, Operation
+from grad.Types import Conditions, JumpType, Operand, OperandType, Operations
 from grad.Types.Instructions import BaseInstruction, CInstruction
 from grad.util import A_register, D_register, ONE_register, constant_operand
 from Test.util import (
@@ -28,34 +28,34 @@ def get_test_cases() -> list[BaseInstruction]:
 
     return [
         CInstruction(
-            0, m0, None, Operation.NOP, {mm0}, JumpType(Conditions.GE, mm0, "0")
+            0, m0, None, Operations.NOP, {mm0}, JumpType(Conditions.GE, mm0, "0")
         ),
         CInstruction(
-            0, mm0, None, Operation.NOP, {m0}, JumpType(Conditions.GE, mm0, "0")
+            0, mm0, None, Operations.NOP, {m0}, JumpType(Conditions.GE, mm0, "0")
         ),
         CInstruction(
-            0, mm0, None, Operation.NOP, {m0}, JumpType(Conditions.GE, m0, "0")
+            0, mm0, None, Operations.NOP, {m0}, JumpType(Conditions.GE, m0, "0")
         ),
         CInstruction(
             0,
             constant_operand("1"),
             None,
-            Operation.NOP,
+            Operations.NOP,
             {m0},
             JumpType(Conditions.GE, constant_operand("2"), "1"),
         ),
         CInstruction(
-            0, m1, None, Operation.NOP, {m0}, JumpType(Conditions.GE, m2, "2")
+            0, m1, None, Operations.NOP, {m0}, JumpType(Conditions.GE, m2, "2")
         ),
         CInstruction(
             0,
             m0,
             mm0,
-            Operation.ADD,
+            Operations.ADD,
             {mmm0},
             JumpType(Conditions.GE, constant_operand("5"), "0"),
         ),
-        CInstruction(0, D_register, ONE_register, Operation.ADD, {A_register}, None),
+        CInstruction(0, D_register, ONE_register, Operations.ADD, {A_register}, None),
     ]
 
 

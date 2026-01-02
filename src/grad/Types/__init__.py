@@ -58,24 +58,10 @@ class OperationType:
     bit_repr: int
 
     def __str__(self):
-        if self == Operation.ABS:
+        if self.symbol == "|":
             return self.symbol + "{}" + self.symbol
         elif self.multiplicity == Multiplicity.UNARY:
             return self.symbol + "{}"
         else:
             return "{} " + self.symbol + " {}"
 
-
-class Operation:
-    AND = OperationType("&", Multiplicity.BINARY, 0)
-    OR = OperationType("|", Multiplicity.BINARY, 1)
-    NOT = OperationType("~", Multiplicity.UNARY, 2)
-    ADD = OperationType("+", Multiplicity.BINARY, 3)
-    SUB = OperationType("-", Multiplicity.BINARY, 4)
-    NEG = OperationType("-", Multiplicity.UNARY, 5)
-    MULT = OperationType("*", Multiplicity.BINARY, 6)
-    DIV = OperationType("/", Multiplicity.BINARY, 7)
-    MOD = OperationType("%", Multiplicity.BINARY, 8)
-    ABS = OperationType("|", Multiplicity.UNARY, 9)
-    SQRT = OperationType("_/", Multiplicity.UNARY, 10)
-    NOP = OperationType("", Multiplicity.UNARY, 11)

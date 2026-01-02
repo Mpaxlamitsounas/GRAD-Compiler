@@ -1,4 +1,4 @@
-from grad.Types import Conditions, JumpType, Operation
+from grad.Types import Conditions, JumpType, Operations
 from grad.Types.Instructions import CInstruction
 from grad.util import D_register, ONE_register
 from Test.util import (
@@ -13,7 +13,7 @@ def run_test_cases():
             0,
             v[0],
             v[1],
-            Operation.ADD,
+            Operations.ADD,
             {D_register},
             JumpType(Conditions.GE, v[2], v[3].value),
         ),
@@ -26,7 +26,7 @@ def run_test_cases():
             0,
             v[0],
             ONE_register,
-            Operation.ADD,
+            Operations.ADD,
             {D_register},
             JumpType(Conditions.GE, v[1], v[2].value),
         ),
@@ -39,7 +39,7 @@ def run_test_cases():
             0,
             v[0],
             None,
-            Operation.NOP,
+            Operations.NOP,
             {D_register},
             JumpType(Conditions.GE, v[1], v[2].value),
         ),

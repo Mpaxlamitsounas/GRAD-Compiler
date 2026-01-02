@@ -6,8 +6,7 @@ from grad.Types import (
     JumpType,
     Multiplicity,
     Operand,
-    OperandType,
-    Operation,
+    OperandType, Operations,
 )
 from grad.Types.Exceptions import AssemblerException
 from grad.Types.Instructions import (
@@ -83,7 +82,7 @@ def _unravel_index(inst: CInstruction, op: Operand) -> list[BaseInstruction]:
                 inst.line_num,
                 M_simple_register,
                 None,
-                Operation.NOP,
+                Operations.NOP,
                 {A_register},
             ),
         )
@@ -171,7 +170,7 @@ def _decompress_binary_operation(
                             inst.line_num,
                             A_register,
                             None,
-                            Operation.NOP,
+                            Operations.NOP,
                             {D_register},
                         ),
                         AInstruction(inst.line_num, inst.y.value),
@@ -212,7 +211,7 @@ def _decompress_binary_operation(
                 x_reg, y_reg = M_simple_register, D_register
                 instructions.append(
                     CInstruction(
-                        inst.line_num, A_register, None, Operation.NOP, {D_register}
+                        inst.line_num, A_register, None, Operations.NOP, {D_register}
                     )
                 )
 
@@ -248,7 +247,7 @@ def _decompress_binary_operation(
                 x_reg, y_reg = D_register, M_simple_register
                 instructions.append(
                     CInstruction(
-                        inst.line_num, A_register, None, Operation.NOP, {D_register}
+                        inst.line_num, A_register, None, Operations.NOP, {D_register}
                     )
                 )
 
@@ -281,7 +280,7 @@ def _decompress_binary_operation(
                                 inst.line_num,
                                 M_simple_register,
                                 None,
-                                Operation.NOP,
+                                Operations.NOP,
                                 {D_register},
                             )
                         )
@@ -369,7 +368,7 @@ def _decompress_destination_part(
                         inst.line_num,
                         D_register,
                         None,
-                        Operation.NOP,
+                        Operations.NOP,
                         last_inst.dest,
                         inst.jmp,
                     )
@@ -434,7 +433,7 @@ def _decompress_jmp_condition_part(
                 inst.line_num,
                 x_reg,
                 y_reg,
-                Operation.SUB,
+                Operations.SUB,
                 set(),
                 JumpType(
                     prev_inst.jmp.condition,
@@ -468,7 +467,7 @@ def _decompress_jmp_destination_part(
             [
                 AInstruction(inst.line_num, prev_jmp.destination),
                 CInstruction(
-                    inst.line_num, D_register, None, Operation.NOP, set(), prev_jmp
+                    inst.line_num, D_register, None, Operations.NOP, set(), prev_jmp
                 ),
             ]
         )
@@ -625,10 +624,10 @@ def _optimise_C_inst_redundant_A_assign_make_inline(
             and all(
                 [
                     prev_inst.x == A_register,
-                    prev_inst.op == Operation.NOP,
+                    prev_inst.op == Operations.NOP,
                     prev_inst.jmp is None,
                     prev_inst.dest == {D_register},
-                    cur_inst.op != Operation.NOP,
+                    cur_inst.op != Operations.NOP,
                     cur_inst.x == D_register or cur_inst.y == D_register,
                 ]
             )
