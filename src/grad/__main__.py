@@ -16,13 +16,17 @@ def process_file():
         lines = Preprocessor.process_lines(f.read())
 
     # parse
-    with open(Path.cwd() / "Output" / (file_path.stem + ".p"), "wt") as f:
+    with open(
+        Path.cwd() / "Output" / (file_path.stem + ".p"), "wt", encoding="utf-8"
+    ) as f:
         parsed_instructions = Parser.parse_lines(lines, output_file=f)
 
     # assemble
     assembled_instructions: list[AInstruction | CInstruction] | None = None
     if "A" in argv[1]:
-        with open(Path.cwd() / "Output" / (file_path.stem + ".a"), "wt") as f:
+        with open(
+            Path.cwd() / "Output" / (file_path.stem + ".a"), "wt", encoding="utf-8"
+        ) as f:
             assembled_instructions = Assembler.assemble_instructions(
                 parsed_instructions, output_file=f
             )
