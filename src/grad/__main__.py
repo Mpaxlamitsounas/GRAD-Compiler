@@ -3,10 +3,15 @@ import random
 import sys
 from pathlib import Path
 from sys import argv
-from types import TracebackType, FrameType
+from types import FrameType, TracebackType
 
 from grad import Assembler, Compiler, Context, Parser, Preprocessor
-from grad.Types.Exceptions import AssemblerException, CompilerException, ParserException
+from grad.Types.Exceptions import (
+    AssemblerException,
+    CompilerException,
+    GradException,
+    ParserException,
+)
 from grad.Types.Instructions import AInstruction, CInstruction
 
 
@@ -48,6 +53,16 @@ def get_last_frame(traceback: TracebackType) -> FrameType:
     return frame.tb_frame
 
 
+def format_exception(verb: str, e: GradException) -> str:
+    frame = get_last_frame(e.__traceback__)
+
+    return f"""Encountered an error while {verb} line {e.line_num}
+    Line content: {e.line}
+    Error message: {e.message}
+    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\"
+"""
+
+
 def main():
     if len(argv) != 3:
         print(
@@ -68,38 +83,13 @@ Functions:
         process_file()
 
     except ParserException as e:
-        frame = get_last_frame(e.__traceback__)
-
-        print(
-            f"""Encountered an error while parsing line {e.line_num}
-    Line content: {e.line}
-    Error message: {e.message}
-    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\"
-"""
-        )
-        return
+        print(format_exception("parsing", e))
 
     except AssemblerException as e:
-        frame = get_last_frame(e.__traceback__)
-
-        print(
-            f"""Encountered an error while assembling line {e.line_num}
-    Line content: {e.line}
-    Error message: {e.message}
-    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\""""
-        )
-        return
+        print(format_exception("assembling", e))
 
     except CompilerException as e:
-        frame = get_last_frame(e.__traceback__)
-
-        print(
-            f"""Encountered an error while compiling line {e.line_num}
-    Line content: {e.line}
-    Error message: {e.message}
-    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\""""
-        )
-        return
+        print(format_exception("compiling", e))
 
 
 if __name__ == "__main__":
