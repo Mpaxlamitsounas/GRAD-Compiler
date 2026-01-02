@@ -9,7 +9,7 @@ from grad.Types.Instructions import (
     CInstruction,
     LabelInstruction,
 )
-from grad.util import constant_operand, strip_and_filter_all, is_valid_identifier_name
+from grad.util import constant_operand, is_valid_identifier_name, strip_and_filter_all
 
 line_num: int = 0
 cur_line: str = ""
@@ -23,7 +23,7 @@ def parse_operand(operand: str) -> Operand:
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{operand}" contains disallowed characters (charset is [a-zA-Z_]).'
+            f'Identifier "{operand}" contains disallowed characters (charset is [a-zA-Z_]).',
         )
 
     if operand in Context.reserved:
@@ -54,7 +54,9 @@ def parse_A_instruction(line: str) -> AInstruction:
 
     if not is_valid_identifier_name(value):
         raise ParserException(
-            line_num, cur_line, f'Identifier "{value}" contains disallowed characters (charset is [a-zA-Z_]).',
+            line_num,
+            cur_line,
+            f'Identifier "{value}" contains disallowed characters (charset is [a-zA-Z_]).',
         )
 
     return AInstruction(line_num, value)
@@ -71,7 +73,9 @@ def parse_alias(line: str) -> None:
 
     if not is_valid_identifier_name(split[0]):
         raise ParserException(
-            line_num, cur_line, f'Identifier "{split[0]}" contains disallowed characters (charset is [a-zA-Z_]).',
+            line_num,
+            cur_line,
+            f'Identifier "{split[0]}" contains disallowed characters (charset is [a-zA-Z_]).',
         )
 
     Context.symbols[split[0]] = split[1]
@@ -86,7 +90,9 @@ def parse_jump_label(line: str) -> LabelInstruction:
 
     if not is_valid_identifier_name(name):
         raise ParserException(
-            line_num, cur_line, f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
+            line_num,
+            cur_line,
+            f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
         )
 
     return LabelInstruction(line_num, name)
@@ -101,7 +107,9 @@ def parse_variable(line: str) -> None:
 
     if not is_valid_identifier_name(name):
         raise ParserException(
-            line_num, cur_line, f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
+            line_num,
+            cur_line,
+            f'Identifier "{name}" contains disallowed characters (charset is [a-zA-Z_]).',
         )
 
     Context.symbols[name] = f"M[{Context.available_RAM.pop()}]"
