@@ -64,4 +64,3 @@ class OperationType:
             return self.symbol + "{}"
         else:
             return "{} " + self.symbol + " {}"
-

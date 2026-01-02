@@ -6,7 +6,8 @@ from grad.Types import (
     JumpType,
     Multiplicity,
     Operand,
-    OperandType, Operations,
+    OperandType,
+    Operations,
 )
 from grad.Types.Exceptions import AssemblerException
 from grad.Types.Instructions import (
