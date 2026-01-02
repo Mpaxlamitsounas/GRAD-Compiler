@@ -8,18 +8,18 @@ VAR I
 VAR ADJ_LENGTH
 
 // Preload with random values
-DEV_OUT_0 := 67
-DEV_OUT_1 := 24
-DEV_OUT_2 := 93
-DEV_OUT_3 := 20
-DEV_OUT_4 := 10
-DEV_OUT_5 := 39
-DEV_OUT_6 := 12
-DEV_OUT_7 := 88
-DEV_OUT_8 := 91
-DEV_OUT_9 := 79
-DEV_OUT_10 := 49
-DEV_OUT_11 := 19
+DEV_OUT_0 := $REPLACE
+DEV_OUT_1 := $REPLACE
+DEV_OUT_2 := $REPLACE
+DEV_OUT_3 := $REPLACE
+DEV_OUT_4 := $REPLACE
+DEV_OUT_5 := $REPLACE
+DEV_OUT_6 := $REPLACE
+DEV_OUT_7 := $REPLACE
+DEV_OUT_8 := $REPLACE
+DEV_OUT_9 := $REPLACE
+DEV_OUT_10 := $REPLACE
+DEV_OUT_11 := $REPLACE
 
 // Necessary since we're working with memory indexes
 // Could subtract START_ADD from counters instead but this is cheaper
