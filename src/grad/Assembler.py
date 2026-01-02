@@ -1,6 +1,6 @@
 from typing import TextIO
 
-from grad import Context
+from grad import Context, Options
 from grad.Types import (
     Conditions,
     JumpType,
@@ -392,42 +392,31 @@ def _decompress_jmp_condition_part(
         # Every decompress step caps the instruction list with a C inst
         # noinspection PyTypeChecker
         prev_inst: CInstruction = instructions[-1]
-        del instructions[-1]
 
-        if len(prev_inst.dest) != 0:
-            prev_inst.dest.add(D_register)
-
-            instructions.append(
-                CInstruction(
-                    inst.line_num,
-                    prev_inst.x,
-                    prev_inst.y,
-                    prev_inst.op,
-                    prev_inst.dest,
-                ),
-            )
+        prev_inst.dest.add(D_register)
 
         match inst.jmp.compared.type:
             case OperandType.Constant:
                 if inst.jmp.compared.value != cur_A:
                     instructions.append(
-                        AInstruction(inst.line_num, inst.jmp.compared.value)
+                        AInstruction(inst.line_num, inst.jmp.compared.value),
                     )
+
                     cur_A = inst.jmp.compared.value
 
                 x_reg, y_reg = D_register, A_register
 
             case OperandType.Register:
-                if inst.jmp.compared.pointer is None:
-                    x_reg, y_reg = D_register, inst.jmp.compared
-
-                else:
+                if inst.jmp.compared.pointer is not None:
                     if cur_A != calc_req_A(prev_inst.jmp.compared):
                         instructions.extend(_unravel_index(inst, inst.jmp.compared))
 
                     x_reg, y_reg = D_register, M_simple_register
 
-        # x_reg and y_reg are assigned to on every path
+                else:
+                    x_reg, y_reg = D_register, inst.jmp.compared
+
+        # assigned in all cases
         # noinspection PyUnboundLocalVariable
         instructions.append(
             CInstruction(
@@ -441,8 +430,10 @@ def _decompress_jmp_condition_part(
                     constant_operand("0"),
                     prev_inst.jmp.destination,
                 ),
-            )
+            ),
         )
+
+        prev_inst.jmp = None
 
 
 def _decompress_jmp_destination_part(
@@ -701,7 +692,8 @@ def assemble_instructions(
     instructions: list[BaseInstruction], output_file: TextIO | None = None
 ) -> list[AInstruction | CInstruction]:
     instructions = decompress_instructions(instructions)
-    instructions = apply_optimisations(instructions)
+    if Options.apply_post_optimisations:
+        instructions = apply_optimisations(instructions)
     instructions = substitute_jump_labels(instructions)
 
     if output_file is not None:
