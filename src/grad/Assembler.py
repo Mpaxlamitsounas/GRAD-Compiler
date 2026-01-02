@@ -656,6 +656,7 @@ def _optimise_C_inst_remove_self_assign(
             [
                 all([inst.x == d for d in inst.dest]),
                 inst.y is None,
+                inst.op == Operations.NOP,
             ]
         ):
             if inst.jmp is None:
