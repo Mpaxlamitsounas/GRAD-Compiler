@@ -16,8 +16,8 @@ A_register = Operand(OperandType.Register, "A")
 M_simple_register = Operand(OperandType.Register, "M")
 
 
-def is_M_register(op: Operand) -> bool:
-    return op.value == "M"
+def is_M_register(op: Operand | None) -> bool:
+    return op.value == "M" if op is not None else False
 
 
 def constant_operand(value: str) -> Operand:
