@@ -1,12 +1,23 @@
-// v4 Assembler test file
 // Notes: Complex and Simple features must not be used together
-M[0] := 64
-M[1] := 65
-M[2] := 66
-M[64] := 0
-M[65] := 1
-(START_LOOP)
-M[M[3]] := M[M[1]] + M[M[0]]
-M[M[0]] := M[M[0]] + 1
-M[M[1]] := M[M[1]] + 1
-M[M[3]] := M[M[3]] + 1; IF JMP START_LOOP
+VAR PREV_2
+VAR PREV_1
+VAR CUR
+VAR PRINT
+
+PREV_1 := 1
+PRINT := DEV_OUT_START + 1
+
+(LOOP)
+
+CUR := PREV_1 + PREV_2
+M[PRINT] := PREV_1
+
+// Wrap around
+PRINT := PRINT + 1; IF < 16400 JMP DONT_WRAP
+PRINT := DEV_OUT_START
+(DONT_WRAP)
+
+PREV_2 := PREV_1
+PREV_1 := CUR
+
+D; JMP LOOP
