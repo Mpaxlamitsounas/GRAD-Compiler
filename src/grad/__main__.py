@@ -3,6 +3,7 @@ import random
 import sys
 from pathlib import Path
 from sys import argv
+from types import TracebackType, FrameType
 
 from grad import Assembler, Compiler, Context, Parser, Preprocessor
 from grad.Types.Exceptions import AssemblerException, CompilerException, ParserException
@@ -40,6 +41,13 @@ def process_file():
             Compiler.compile_instructions(assembled_instructions, output_file=f)
 
 
+def get_last_frame(traceback: TracebackType) -> FrameType:
+    frame = traceback
+    while frame.tb_next is not None:
+        frame = frame.tb_next
+    return frame.tb_frame
+
+
 def main():
     if len(argv) != 3:
         print(
@@ -60,26 +68,36 @@ Functions:
         process_file()
 
     except ParserException as e:
+        frame = get_last_frame(e.__traceback__)
+
         print(
             f"""Encountered an error while parsing line {e.line_num}
-    Line content: "{e.line}"
-    Error message: {e.message}"""
+    Line content: {e.line}
+    Error message: {e.message}
+    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\"
+"""
         )
         return
 
     except AssemblerException as e:
+        frame = get_last_frame(e.__traceback__)
+
         print(
             f"""Encountered an error while assembling line {e.line_num}
-    Line content: "{e.line}"
-    Error message: {e.message}"""
+    Line content: {e.line}
+    Error message: {e.message}
+    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\""""
         )
         return
 
     except CompilerException as e:
+        frame = get_last_frame(e.__traceback__)
+
         print(
             f"""Encountered an error while compiling line {e.line_num}
-    Line content: "{e.line}"
-    Error message: {e.message}"""
+    Line content: {e.line}
+    Error message: {e.message}
+    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\""""
         )
         return
 
