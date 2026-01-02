@@ -1,4 +1,3 @@
-// Notes: Tests simple instructions
 DEV_OUT_0 := 1
 
 (START_LOOP)

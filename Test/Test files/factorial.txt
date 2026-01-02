@@ -1,4 +1,3 @@
-// Notes: Complex and Simple features must not be used together
 (READ)
 DEV_OUT_1 := DEV_IN_0
 DEV_OUT_0 := 1
