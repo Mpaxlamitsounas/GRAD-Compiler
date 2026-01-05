@@ -205,7 +205,7 @@ def parse_C_instruction(line: str) -> CInstruction:
                 jmp = JumpType(Conditions.TRUE, constant_operand("0"), None)
 
             case 1:
-                jmp = strip_and_filter_all(jmp[0].split())
+                jmp = strip_and_filter_all(jmp[0].split(), "IF")
 
                 match len(jmp):
                     case 1:

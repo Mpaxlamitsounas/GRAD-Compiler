@@ -38,9 +38,7 @@ class JumpType:
 
     def __str__(self):
         # ConditionType("", 7) == Conditions.TRUE
-        s = "IF " if self.condition != ConditionType("", 7) else ""
-        s += self.condition.value
-        s += f" {self.compared} " if self.condition != ConditionType("", 7) else ""
+        s = f"IF {self.condition.value} {self.compared} " if self.condition != ConditionType("", 7) else ""
         s += "JMP"
         s += f" {self.destination}" if self.destination is not None else ""
         return s
