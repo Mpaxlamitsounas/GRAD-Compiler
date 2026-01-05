@@ -28,6 +28,9 @@ def reset():
     Parser.cur_line = ""
     Context.symbols = default_symbols.copy()
 
+    if Options.use_dev_out_memory:
+        Context.available_memory = list(range(16388, 16400))
+
     if Options.shuffle_memory:
         random.shuffle(Context.available_memory)
 
