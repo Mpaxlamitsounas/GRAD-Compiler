@@ -108,7 +108,7 @@ def _decompress_unary_operation(
 
     # instruction has already been decompressed
     if inst.x.type == OperandType.Register and inst.x.pointer is None:
-        instructions.append(inst)
+        instructions.append(inst.copy())
         return
 
     match inst.x.type:
@@ -445,6 +445,11 @@ def _decompress_jmp_destination_part(
     # noinspection PyTypeChecker
     prev_inst: CInstruction = instructions[-1]
     prev_jmp = prev_inst.jmp
+
+    try:
+        inst.jmp.destination
+    except AttributeError:
+        pass
 
     if inst.jmp.destination != cur_A and inst.jmp.destination is not None:
         if inst.jmp.condition != Conditions.TRUE:
