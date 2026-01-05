@@ -155,7 +155,7 @@ def _decompress_binary_operation(
             for reg in [inst.x, inst.y]
         ]
     ):
-        instructions.append(inst)
+        instructions.append(inst.copy())
         return
 
     match inst.x.type, inst.y.type:
