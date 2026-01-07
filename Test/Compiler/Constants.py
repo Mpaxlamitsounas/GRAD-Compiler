@@ -1,7 +1,7 @@
 from grad.Types import Conditions, JumpType, Operations
 from grad.Types.Instructions import CInstruction
 from grad.util import D_register, ONE_register
-from Test.util import (
+from Test.Compiler.util import (
     run_test_case,
 )
 
