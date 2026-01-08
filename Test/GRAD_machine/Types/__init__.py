@@ -25,7 +25,7 @@ class ALUFlags(IntFlag):
 
     def to_ALU_input(self) -> str:
         s = format(self.value, "08b")
-        return "  ".join([s[0], s[1], s[2], s[3], s[4:7], s[7]])
+        return "  ".join([s[0], s[1], s[2], s[3], f"0b{s[4:7]}", s[7]])
 
 
 @dataclass
