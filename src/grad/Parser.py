@@ -197,6 +197,8 @@ def parse_C_instruction(line: str) -> CInstruction:
         dest = {parse_operand(d) for d in strip_and_filter_all(dest.split(","))}
 
     if jmp is not None:
+        jmp = jmp.strip()
+        has_dest: bool = not jmp.endswith("JMP")
         jmp = strip_and_filter_all(jmp.split("JMP"))
 
         match len(jmp):
@@ -204,45 +206,89 @@ def parse_C_instruction(line: str) -> CInstruction:
             case 0:
                 jmp = JumpType(Conditions.TRUE, constant_operand("0"), None)
 
+            # has only destination, or comparison
             case 1:
-                jmp = strip_and_filter_all(jmp[0].split(), "IF")
+                if has_dest:
+                    jmp = JumpType(
+                        Conditions.TRUE,
+                        constant_operand("0"),
+                        (
+                            jmp[0]
+                            if jmp[0] not in Context.symbols
+                            else Context.symbols[jmp[0]]
+                        ),
+                    )
 
-                match len(jmp):
-                    case 1:
-                        jmp = JumpType(
-                            Conditions.TRUE,
-                            constant_operand("0"),
-                            (
-                                jmp[0]
-                                if jmp[0] not in Context.symbols
-                                else Context.symbols[jmp[0]]
-                            ),
-                        )
+                else:
+                    jmp = jmp[0]
+                    if jmp.startswith("IF"):
+                        jmp = jmp.replace("IF", "", 1).strip()
 
-                    case 2:
-                        jmp[0] = jmp[0].replace("IF", "").strip()
-                        jmp = JumpType(
-                            Conditions.get_from_value(jmp[0]),
-                            parse_operand(jmp[1]),
-                            None,
-                        )
+                    if "==" in jmp:
+                        condition = Conditions.EQ
 
+                    elif "!=" in jmp:
+                        condition = Conditions.NE
+
+                    elif "<=" in jmp:
+                        condition = Conditions.LE
+
+                    elif ">=" in jmp:
+                        condition = Conditions.GE
+
+                    elif "<" in jmp:
+                        condition = Conditions.LT
+
+                    elif ">" in jmp:
+                        condition = Conditions.GT
+
+                    else:
+                        condition = Conditions.TRUE
+
+                    jmp = strip_and_filter_all(jmp.split(condition.value))[0]
+
+                    jmp = JumpType(
+                        condition,
+                        parse_operand(jmp),
+                        None,
+                    )
+
+            # has both condition and destination
             case 2:
-                jmp[0] = jmp[0].replace("IF", "").strip()
                 jmp_dest = (
                     jmp[1] if jmp[1] not in Context.symbols else Context.symbols[jmp[1]]
                 )
-                try:
-                    jmp_cond, jmp_oper = strip_and_filter_all(jmp[0].split())
 
-                except:
-                    raise ParserException(
-                        line_num, cur_line, "Failed to parse jump condition."
-                    )
+                jmp = jmp[0]
+                if jmp.startswith("IF"):
+                    jmp = jmp.replace("IF", "", 1).strip()
+
+                if "==" in jmp:
+                    condition = Conditions.EQ
+
+                elif "!=" in jmp:
+                    condition = Conditions.NE
+
+                elif "<=" in jmp:
+                    condition = Conditions.LE
+
+                elif ">=" in jmp:
+                    condition = Conditions.GE
+
+                elif "<" in jmp:
+                    condition = Conditions.LT
+
+                elif ">" in jmp:
+                    condition = Conditions.GT
+
+                else:
+                    condition = Conditions.TRUE
+
+                jmp = strip_and_filter_all(jmp.split(condition.value))[0]
 
                 jmp = JumpType(
-                    Conditions.get_from_value(jmp_cond),
-                    parse_operand(jmp_oper),
+                    condition,
+                    parse_operand(jmp),
                     jmp_dest,
                 )
 
