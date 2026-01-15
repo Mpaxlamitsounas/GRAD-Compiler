@@ -30,7 +30,7 @@ def main():
     run_test_cases(
         [
             ALUCase(0, 0, 0, ALUFlags.AND),
-            ALUCase(0, 0, GRAD_INT_MIN, ALUFlags.no),
+            ALUCase(0, 0, -1, ALUFlags.no),
             ALUCase(1, 1, 0, ALUFlags.zx),
             ALUCase(1, 1, 0, ALUFlags.zy),
             ALUCase(1, 1, ~1, ALUFlags.nx | ALUFlags.ny),
@@ -78,7 +78,7 @@ def main():
             ALUCase(
                 BIT_PATTERN_ALTERNATING_1,
                 BIT_PATTERN_ALTERNATING_2,
-                GRAD_INT_MIN,
+                -1,
                 ALUFlags.OR,
             ),
         ],
@@ -109,7 +109,7 @@ def main():
             ALUCase(1, 1, 2, ALUFlags.ADD),
             ALUCase(1, -1, 0, ALUFlags.ADD),
             ALUCase(-1, -1, -2, ALUFlags.ADD),
-            ALUCase(GRAD_INT_MIN, 1, 0, ALUFlags.ADD),
+            ALUCase(GRAD_INT_MIN + GRAD_INT_MAX, 1, 0, ALUFlags.ADD),
             ALUCase(GRAD_INT_MAX, 1, 0b1000000000000000, ALUFlags.ADD),
             ALUCase(1, 1, -1, ALUFlags.ADD | ALUFlags.nx),
         ],
@@ -195,7 +195,7 @@ def main():
             ALUCase(1, 0, 1, ALUFlags.ABS),
             ALUCase(-1, 0, 1, ALUFlags.ABS),
             ALUCase(-GRAD_INT_MAX, 0, GRAD_INT_MAX, ALUFlags.ABS),
-            ALUCase(GRAD_INT_MIN, 0, 1, ALUFlags.ABS),
+            ALUCase(GRAD_INT_MIN + 1, 0, GRAD_INT_MAX, ALUFlags.ABS),
         ],
         "ABS.t",
     )
@@ -208,7 +208,8 @@ def main():
             ALUCase(2, 0, 1, ALUFlags.SQRT),
             ALUCase(4, 0, 2, ALUFlags.SQRT),
             ALUCase(GRAD_INT_MAX, 0, 181, ALUFlags.SQRT),
-            ALUCase(GRAD_INT_MIN, 0, 255, ALUFlags.SQRT),
+            ALUCase(GRAD_INT_MIN + GRAD_INT_MAX, 0, 255, ALUFlags.SQRT),
+            ALUCase(GRAD_INT_MIN, 0, 181, ALUFlags.SQRT),
         ],
         "SQRT.t",
     )
