@@ -195,7 +195,6 @@ def main():
             ALUCase(1, 0, 1, ALUFlags.ABS),
             ALUCase(-1, 0, 1, ALUFlags.ABS),
             ALUCase(-GRAD_INT_MAX, 0, GRAD_INT_MAX, ALUFlags.ABS),
-            ALUCase(GRAD_INT_MIN + 1, 0, GRAD_INT_MAX, ALUFlags.ABS),
         ],
         "ABS.t",
     )
