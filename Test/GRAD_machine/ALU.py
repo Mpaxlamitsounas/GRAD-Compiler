@@ -170,6 +170,8 @@ def main():
             ALUCase(5, -4, 5 // -4, ALUFlags.DIV),
             ALUCase(-1, -4, -1 // -4, ALUFlags.DIV),
             ALUCase(-5, -4, -5 // -4, ALUFlags.DIV),
+            ALUCase(1, 0, -1, ALUFlags.DIV),
+            ALUCase(-1, 0, 0, ALUFlags.DIV),
         ],
         "DIV.t",
     )
@@ -185,6 +187,8 @@ def main():
             ALUCase(5, -4, 5 % -4, ALUFlags.MOD),
             ALUCase(-1, -4, -1 % -4, ALUFlags.MOD),
             ALUCase(-5, -4, -5 % -4, ALUFlags.MOD),
+            ALUCase(1, 0, 1, ALUFlags.MOD),
+            ALUCase(-1, 0, -1, ALUFlags.MOD),
         ],
         "MOD.t",
     )
