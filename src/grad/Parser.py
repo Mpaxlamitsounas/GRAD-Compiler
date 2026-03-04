@@ -160,7 +160,7 @@ def parse_C_instruction(line: str) -> CInstruction:
     elif "*" in operation_str:
         operation = Operations.MULT
 
-    elif "/" in operation_str and "_" not in operation_str:
+    elif "/" in operation_str and "_/" not in operation_str:
         operation = Operations.DIV
 
     elif "%" in operation_str:
