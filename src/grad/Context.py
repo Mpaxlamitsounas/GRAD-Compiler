@@ -17,4 +17,4 @@ reserved: tuple[str, ...] = (
     "VAR",
     "+",
 )
-available_memory: list[int] = list(range(2**14, 64, -1))
+available_memory: list[int] = list(range(64, 2**14, 1))
