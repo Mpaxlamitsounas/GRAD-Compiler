@@ -120,7 +120,15 @@ def parse_variable(line: str) -> None:
             f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
         )
 
-    Context.symbols[name] = f"M[{Context.available_memory.pop()}]"
+    try:
+        Context.symbols[name] = f"M[{Context.available_memory.pop()}]"
+
+    except IndexError:
+        raise ParserException(
+            line_num,
+            cur_line,
+            f'No memory address available to assign to variable {name}.'
+        )
 
 
 def parse_C_instruction(line: str) -> CInstruction:
