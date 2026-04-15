@@ -207,6 +207,12 @@ def parse_C_instruction(line: str) -> CInstruction:
     if jmp is not None:
         jmp = jmp.strip()
         has_dest: bool = not jmp.endswith("JMP")
+        if jmp.count("JMP") > 1:
+            raise ParserException(
+                line_num,
+                line,
+                'This compiler cannot parse C instructions with operands whose name contains "JMP" in the jump part.',
+            )
         jmp = strip_and_filter_all(jmp.split("JMP"))
 
         match len(jmp):
