@@ -89,7 +89,8 @@ def main():
             f"""Usage: python -m grad <functions> <filename> [<filename>...]
 Functions:
     {"a (Assemble)":12} - Assembles specified file
-    {"c (Compile)":12} - Compiles Assemble output or specified file, instructions must be in Simple form"""
+    {"c (Compile)":12} - Compiles Assemble output or specified file, instructions must be in Simple form
+    {"h (Help)":12} - Displays this menu"""
         )
         return
 
