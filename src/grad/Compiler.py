@@ -56,7 +56,7 @@ def compile_C_instruction(inst: CInstruction) -> bytes:
         )
 
     # memory bit
-    value |= 0x4000 if any([is_M_register(inst.x), is_M_register(inst.y)]) else 0x0000
+    value |= 0x4000 if any([is_M_register(inst.x), is_M_register(inst.y)]) else 0
 
     # inputs selection
     shift = 0

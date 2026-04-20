@@ -127,7 +127,7 @@ def parse_variable(line: str) -> None:
         raise ParserException(
             line_num,
             cur_line,
-            f'No memory address available to assign to variable {name}.'
+            f"No memory address available to assign to variable {name}.",
         )
 
 

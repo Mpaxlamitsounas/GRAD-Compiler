@@ -85,13 +85,11 @@ def format_exception(verb: str, file: str, e: GradException) -> str:
 
 def main():
     if len(argv) < 3 or (len(argv) > 1 and "H" in argv[1].upper()):
-        print(
-            f"""Usage: python -m grad <functions> <filename> [<filename>...]
+        print(f"""Usage: python -m grad <functions> <filename> [<filename>...]
 Functions:
     {"a (Assemble)":12} - Assembles specified file
     {"c (Compile)":12} - Compiles Assemble output or specified file, instructions must be in Simple form
-    {"h (Help)":12} - Displays this menu"""
-        )
+    {"h (Help)":12} - Displays this menu""")
         return
 
     initialise()
