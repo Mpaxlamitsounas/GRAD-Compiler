@@ -21,6 +21,12 @@ def is_M_register(op: Operand | None) -> bool:
 
 
 def constant_operand(value: str) -> Operand:
+    if value == "1":
+        return ONE_register
+
+    if value == "2":
+        return TWO_register
+
     return Operand(OperandType.Constant, value)
 
 
