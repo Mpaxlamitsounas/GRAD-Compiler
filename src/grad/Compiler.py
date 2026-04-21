@@ -1,5 +1,6 @@
 from typing import BinaryIO
 
+from grad import Options
 from grad.Types import Operand
 from grad.Types.Exceptions import CompilerException
 from grad.Types.Instructions import AInstruction, CInstruction
@@ -20,7 +21,7 @@ def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:
 
 
 def compile_A_instruction(inst: AInstruction) -> bytes:
-    return int(inst.value).to_bytes(2, "big")
+    return int(inst.value).to_bytes(2, Options.byte_ordering)
 
 
 def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
@@ -87,7 +88,7 @@ def compile_C_instruction(inst: CInstruction) -> bytes:
     # command selection
     value |= inst.op.bit_repr
 
-    return value.to_bytes(2, "big")
+    return value.to_bytes(2, Options.byte_ordering)
 
 
 def compile_instruction(
