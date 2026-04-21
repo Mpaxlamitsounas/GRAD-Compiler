@@ -9,7 +9,7 @@ from grad.util import A_register, D_register, ONE_register, TWO_register, is_M_r
 
 def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:
     if not inst.value.isdigit():
-        return False, "A instruction value must be numeric,", None
+        return False, "A instruction value must be numeric.", None
 
     if (value := int(inst.value)) < 0:
         return False, "A instruction value must be non negative.", value
