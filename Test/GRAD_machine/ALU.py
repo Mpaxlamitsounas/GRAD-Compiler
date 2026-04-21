@@ -7,7 +7,6 @@ from GRAD_machine.util import (
     GRAD_INT_MIN,
     to_binary,
 )
-
 from Test.GRAD_machine.Types import ALUCase, ALUFlags
 
 

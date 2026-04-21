@@ -1,8 +1,7 @@
-from util import run_test_case_sequence
-
 from grad.Types import Operand, OperandType, Operations
 from grad.Types.Instructions import CInstruction
 from grad.util import D_register
+from util import run_test_case_sequence
 
 
 def run_test_cases():

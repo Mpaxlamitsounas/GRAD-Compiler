@@ -1,5 +1,6 @@
 from grad.Types import Conditions, JumpType, Operand, OperandType, Operations
 from grad.Types.Instructions import CInstruction
+
 from Test.Compiler.util import (
     run_test_case,
 )
