@@ -1,9 +1,9 @@
-from grad import Assembler
-from grad.Types import Conditions, JumpType, Operand, OperandType, Operations
-from grad.Types.Instructions import BaseInstruction, CInstruction
-from grad.util import A_register, D_register, ONE_register, constant_operand
+from grad_compiler import Assembler
+from grad_compiler.Types import Conditions, JumpType, Operand, OperandType, Operations
+from grad_compiler.Types.Instructions import BaseInstruction, CInstruction
+from grad_compiler.util import A_register, D_register, ONE_register, constant_operand
 
-from Test.Compiler.util import (
+from Test.util import (
     write_lines_to_file,
 )
 

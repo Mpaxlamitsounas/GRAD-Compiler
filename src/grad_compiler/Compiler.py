@@ -1,10 +1,10 @@
 from typing import BinaryIO
 
-from grad import Options
-from grad.Types import Operand
-from grad.Types.Exceptions import CompilerException
-from grad.Types.Instructions import AInstruction, CInstruction
-from grad.util import A_register, D_register, ONE_register, TWO_register, is_M_register
+from grad_compiler import Options
+from grad_compiler.Types import Operand
+from grad_compiler.Types.Exceptions import CompilerException
+from grad_compiler.Types.Instructions import AInstruction, CInstruction
+from grad_compiler.util import A_register, D_register, ONE_register, TWO_register, is_M_register
 
 
 def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:

@@ -1,15 +1,15 @@
 from typing import TextIO
 
-from grad import Context
-from grad.Types import Conditions, JumpType, Operand, OperandType, Operations
-from grad.Types.Exceptions import ParserException
-from grad.Types.Instructions import (
+from grad_compiler import Context
+from grad_compiler.Types import Conditions, JumpType, Operand, OperandType, Operations
+from grad_compiler.Types.Exceptions import ParserException
+from grad_compiler.Types.Instructions import (
     AInstruction,
     BaseInstruction,
     CInstruction,
     LabelInstruction,
 )
-from grad.util import constant_operand, is_valid_identifier_name, strip_and_filter_all
+from grad_compiler.util import constant_operand, is_valid_identifier_name, strip_and_filter_all
 
 line_num: int = 0
 cur_line: str = ""

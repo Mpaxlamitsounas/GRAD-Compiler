@@ -1,4 +1,4 @@
-from grad.Types import Multiplicity, OperationType
+from grad_compiler.Types import Multiplicity, OperationType
 
 AND = OperationType("&", Multiplicity.BINARY, 0)
 OR = OperationType("|", Multiplicity.BINARY, 1)

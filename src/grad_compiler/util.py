@@ -1,4 +1,4 @@
-from grad.Types import Operand, OperandType
+from grad_compiler.Types import Operand, OperandType
 
 
 def strip_all(s_list: list[str]) -> list[str]:

@@ -1,9 +1,9 @@
 from collections.abc import Callable
 from pathlib import Path
 
-from grad import Assembler, Parser
-from grad.Types import Operand
-from grad.Types.Instructions import BaseInstruction
+from grad_compiler import Assembler, Parser
+from grad_compiler.Types import Operand
+from grad_compiler.Types.Instructions import BaseInstruction
 
 
 def make_combination_cases(length: int) -> list[tuple[bool, ...]]:

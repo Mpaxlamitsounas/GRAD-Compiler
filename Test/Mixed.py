@@ -1,7 +1,7 @@
-from grad.Types import Conditions, JumpType, Operand, OperandType, Operations
-from grad.Types.Instructions import CInstruction
+from grad_compiler.Types import Conditions, JumpType, Operand, OperandType, Operations
+from grad_compiler.Types.Instructions import CInstruction
 
-from Test.Compiler.util import (
+from Test.util import (
     run_test_case,
 )
 

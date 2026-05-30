@@ -1,6 +1,6 @@
-from grad.Types import Operand, OperandType, Operations
-from grad.Types.Instructions import CInstruction
-from grad.util import D_register
+from grad_compiler.Types import Operand, OperandType, Operations
+from grad_compiler.Types.Instructions import CInstruction
+from grad_compiler.util import D_register
 from util import run_test_case_sequence
 
 

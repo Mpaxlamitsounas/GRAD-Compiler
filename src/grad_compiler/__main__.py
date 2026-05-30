@@ -5,15 +5,15 @@ from pathlib import Path
 from sys import argv
 from types import FrameType, TracebackType
 
-from grad import Assembler, Compiler, Context, Options, Parser, Preprocessor
-from grad.Context import default_symbols
-from grad.Types.Exceptions import (
+from grad_compiler import Assembler, Compiler, Context, Options, Parser, Preprocessor
+from grad_compiler.Context import default_symbols
+from grad_compiler.Types.Exceptions import (
     AssemblerException,
     CompilerException,
     GradException,
     ParserException,
 )
-from grad.Types.Instructions import AInstruction, CInstruction
+from grad_compiler.Types.Instructions import AInstruction, CInstruction
 
 
 def initialise():

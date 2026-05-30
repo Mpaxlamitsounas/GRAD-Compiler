@@ -1,7 +1,7 @@
 from typing import TextIO
 
-from grad import Context, Options
-from grad.Types import (
+from grad_compiler import Context, Options
+from grad_compiler.Types import (
     Conditions,
     JumpType,
     Multiplicity,
@@ -9,14 +9,14 @@ from grad.Types import (
     OperandType,
     Operations,
 )
-from grad.Types.Exceptions import AssemblerException
-from grad.Types.Instructions import (
+from grad_compiler.Types.Exceptions import AssemblerException
+from grad_compiler.Types.Instructions import (
     AInstruction,
     BaseInstruction,
     CInstruction,
     LabelInstruction,
 )
-from grad.util import (
+from grad_compiler.util import (
     A_register,
     D_register,
     M_simple_register,

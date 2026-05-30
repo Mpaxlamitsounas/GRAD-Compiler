@@ -1,8 +1,8 @@
-from grad.Types import Conditions, JumpType, Operations
-from grad.Types.Instructions import CInstruction
-from grad.util import D_register, ONE_register
+from grad_compiler.Types import Conditions, JumpType, Operations
+from grad_compiler.Types.Instructions import CInstruction
+from grad_compiler.util import D_register, ONE_register
 
-from Test.Compiler.util import (
+from Test.util import (
     run_test_case,
 )
 

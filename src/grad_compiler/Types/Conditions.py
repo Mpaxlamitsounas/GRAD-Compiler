@@ -1,4 +1,4 @@
-from grad.Types import ConditionType
+from grad_compiler.Types import ConditionType
 
 FALSE = ConditionType("", 0)
 GT = ConditionType(">", 1)
