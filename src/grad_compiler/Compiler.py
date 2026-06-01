@@ -1,10 +1,14 @@
-from typing import BinaryIO
-
-from grad_compiler import Options
+from grad_compiler import Context, Options
 from grad_compiler.Types import Operand
 from grad_compiler.Types.Exceptions import CompilerException
 from grad_compiler.Types.Instructions import AInstruction, CInstruction
-from grad_compiler.util import A_register, D_register, ONE_register, TWO_register, is_M_register
+from grad_compiler.util import (
+    A_register,
+    D_register,
+    ONE_register,
+    TWO_register,
+    is_M_register,
+)
 
 
 def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:
@@ -91,9 +95,7 @@ def compile_C_instruction(inst: CInstruction) -> bytes:
     return value.to_bytes(2, Options.byte_ordering)
 
 
-def compile_instruction(
-    instruction: AInstruction | CInstruction, output_file: BinaryIO | None = None
-) -> bytes:
+def compile_instruction(instruction: AInstruction | CInstruction) -> bytes:
     if isinstance(instruction, AInstruction):
         is_valid, err_msg, value = check_A_inst_validity(instruction)
         if not is_valid:
@@ -115,13 +117,19 @@ def compile_instruction(
             "Instructions to be compiled must either be A or C instructions.",
         )
 
-    if output_file is not None:
-        output_file.write(inst)
-
     return inst
 
 
 def compile_instructions(
-    instructions: list[AInstruction | CInstruction], output_file: BinaryIO | None = None
+    instructions: list[AInstruction | CInstruction],
 ) -> list[bytes]:
-    return [compile_instruction(inst, output_file) for inst in instructions]
+    compiled_instructions: list[bytes] = []
+    for inst in instructions:
+        try:
+            compiled_instructions.append(compile_instruction(inst))
+
+        except CompilerException as e:
+            Context.exceptions.append(e)
+            continue
+
+    return compiled_instructions

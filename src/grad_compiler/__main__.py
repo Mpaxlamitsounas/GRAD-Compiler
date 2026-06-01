@@ -9,7 +9,6 @@ from grad_compiler import Assembler, Compiler, Context, Options, Parser, Preproc
 from grad_compiler.Context import default_symbols
 from grad_compiler.Types.Exceptions import (
     AssemblerException,
-    CompilerException,
     GradException,
     ParserException,
 )
@@ -27,6 +26,7 @@ def reset():
     Parser.line_num = 0
     Parser.cur_line = ""
     Context.symbols = default_symbols.copy()
+    Context.exceptions = []
 
     if Options.use_dev_out_memory:
         Context.available_memory = list(range(16388, 16400))
@@ -35,52 +35,77 @@ def reset():
         random.shuffle(Context.available_memory)
 
 
+def get_last_frame(traceback: TracebackType) -> FrameType:
+    frame = traceback
+    while frame.tb_next is not None:
+        frame = frame.tb_next
+
+    return frame.tb_frame
+
+
+def format_exception(e: GradException) -> str:
+    frame = get_last_frame(e.__traceback__)
+
+    exception_path: str = frame.f_code.co_filename
+    try:
+        exception_path = str(Path(exception_path).relative_to(Path.cwd()))
+
+    except ValueError:
+        pass
+
+    verb = (
+        "parsing"
+        if type(e) is ParserException
+        else "assembling" if type(e) is AssemblerException else "compiling"
+    )
+
+    return f"""Encountered an error on line {e.line_num} while {verb}.
+    Line content: {e.line}
+    Error message: {e.message}
+    Occurred in \"{exception_path}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\"
+"""
+
+
 def process_file(file: str):
+    print(f"{"-" * 80}\nProcessing file {file}.")
+
     # preprocess
     file_path: Path = Path(file)
-    with open(file_path, "rt", encoding="utf-8") as f:
-        lines = Preprocessor.process_lines(f.read())
+    with open(file_path, "rt", encoding="utf-8") as file:
+        lines = Preprocessor.process_lines(file.read())
 
     # parse
     with open(
         Path.cwd() / "Output" / (file_path.stem + ".p"), "wt", encoding="utf-8"
-    ) as f:
-        parsed_instructions = Parser.parse_lines(lines, output_file=f)
+    ) as file:
+        parsed_instructions = Parser.parse_lines(lines)
+        file.writelines([f"{inst}\n" for inst in parsed_instructions])
 
     # assemble
     assembled_instructions: list[AInstruction | CInstruction] | None = None
     if "A" in argv[1]:
         with open(
             Path.cwd() / "Output" / (file_path.stem + ".a"), "wt", encoding="utf-8"
-        ) as f:
+        ) as file:
             assembled_instructions = Assembler.assemble_instructions(
-                parsed_instructions, output_file=f
+                parsed_instructions
             )
+            file.writelines([f"{inst}\n" for inst in assembled_instructions])
 
     # compile
-    if "C" in argv[1]:
+    if "C" in argv[1] and len(Context.exceptions) == 0:
         if assembled_instructions is None:
             assembled_instructions = parsed_instructions
 
-        with open(Path.cwd() / "Output" / (file_path.stem + ".c"), "wb") as f:
-            Compiler.compile_instructions(assembled_instructions, output_file=f)
+        with open(Path.cwd() / "Output" / (file_path.stem + ".c"), "wb") as file:
+            compiled_instructions = Compiler.compile_instructions(
+                assembled_instructions
+            )
+            if len(Context.exceptions) == 0:
+                file.writelines(compiled_instructions)
 
-
-def get_last_frame(traceback: TracebackType) -> FrameType:
-    frame = traceback
-    while frame.tb_next is not None:
-        frame = frame.tb_next
-    return frame.tb_frame
-
-
-def format_exception(verb: str, file: str, e: GradException) -> str:
-    frame = get_last_frame(e.__traceback__)
-
-    return f"""Encountered an error on line {e.line_num} while {verb} file \"{file}\", continuing to next file.
-    Line content: {e.line}
-    Error message: {e.message}
-    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\"
-"""
+    for exception in Context.exceptions:
+        print(format_exception(exception))
 
 
 def main():
@@ -100,15 +125,6 @@ Functions:
         try:
             process_file(file)
 
-        except ParserException as e:
-            print(format_exception("parsing", file, e))
-
-        except AssemblerException as e:
-            print(format_exception("assembling", file, e))
-
-        except CompilerException as e:
-            print(format_exception("compiling", file, e))
-
         except KeyboardInterrupt:
             print("Received interrupt, exiting.")
             break
@@ -118,10 +134,16 @@ Functions:
 
         except Exception as e:
             frame = get_last_frame(e.__traceback__)
+            exception_path: str = frame.f_code.co_filename
+            try:
+                exception_path = str(Path(exception_path).relative_to(Path.cwd()))
+
+            except ValueError:
+                pass
 
             print(
-                f"""Caught unhandled exception while processing file \"{file}\", continuing to next file.
-    Occurred in \"{frame.f_code.co_filename}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\" and is of type \"{str(type(e))[8:-2]}\""""
+                f"""Encountered unhandled exception, continuing to next file.
+    Occurred in \"{exception_path}\" on line {frame.f_lineno} within \"{frame.f_code.co_name}\" and is of type \"{str(type(e))[8:-2]}\"\n"""
             )
 
 

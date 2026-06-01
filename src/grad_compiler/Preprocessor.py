@@ -1,6 +1,3 @@
-from typing import TextIO
-
-
 def remove_comments(line: str) -> str:
     if "//" in line:
         idx = line.find("//")
@@ -9,7 +6,7 @@ def remove_comments(line: str) -> str:
         return line
 
 
-def process_lines(file: str, output_file: TextIO | None = None) -> list[str]:
+def process_lines(file: str) -> list[str]:
     lines: list[str] = []
     for line in file.split("\n"):
         line = line.upper()
@@ -17,8 +14,5 @@ def process_lines(file: str, output_file: TextIO | None = None) -> list[str]:
         line = line.strip()
         if line != "":
             lines.append(line)
-
-            if output_file is not None:
-                output_file.write(line)
 
     return lines

@@ -1,5 +1,3 @@
-from typing import TextIO
-
 from grad_compiler import Context, Options
 from grad_compiler.Types import (
     Conditions,
@@ -528,7 +526,12 @@ def decompress_instructions(
 ) -> list[BaseInstruction]:
     decompressed_instructions: list[BaseInstruction] = []
     for inst in instructions:
-        decompressed_instructions.extend(decompress_instruction(inst))
+        try:
+            decompressed_instructions.extend(decompress_instruction(inst))
+
+        except AssemblerException as e:
+            Context.exceptions.append(e)
+            continue
 
     return decompressed_instructions
 
@@ -550,11 +553,17 @@ def substitute_jump_labels(
                 inst.value = labels[inst.value]
 
             elif not inst.value.isdigit():
-                raise AssemblerException(
-                    inst.line_num,
-                    str(inst),
-                    "A instruction value must be numeric or a numeric alias.",
-                )
+                # necessary for exception to have a traceback
+                try:
+                    raise AssemblerException(
+                        inst.line_num,
+                        str(inst),
+                        "A instruction value must be numeric or a numeric alias.",
+                    )
+
+                except AssemblerException as e:
+                    Context.exceptions.append(e)
+                    continue
 
     # no BaseInstruction instances are ever added, and all LabelInstruction instances are removed here
     # noinspection PyTypeChecker
@@ -694,14 +703,11 @@ def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruc
 
 
 def assemble_instructions(
-    instructions: list[BaseInstruction], output_file: TextIO | None = None
+    instructions: list[BaseInstruction],
 ) -> list[AInstruction | CInstruction]:
     instructions = decompress_instructions(instructions)
     if Options.apply_post_optimisations:
         instructions = apply_optimisations(instructions)
     instructions = substitute_jump_labels(instructions)
-
-    if output_file is not None:
-        output_file.writelines([f"{inst}\n" for inst in instructions])
 
     return instructions

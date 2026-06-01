@@ -1,5 +1,3 @@
-from typing import TextIO
-
 from grad_compiler import Context
 from grad_compiler.Types import Conditions, JumpType, Operand, OperandType, Operations
 from grad_compiler.Types.Exceptions import ParserException
@@ -9,7 +7,11 @@ from grad_compiler.Types.Instructions import (
     CInstruction,
     LabelInstruction,
 )
-from grad_compiler.util import constant_operand, is_valid_identifier_name, strip_and_filter_all
+from grad_compiler.util import (
+    constant_operand,
+    is_valid_identifier_name,
+    strip_and_filter_all,
+)
 
 line_num: int = 0
 cur_line: str = ""
@@ -211,7 +213,7 @@ def parse_C_instruction(line: str) -> CInstruction:
             raise ParserException(
                 line_num,
                 line,
-                'This compiler cannot parse C instructions with operands whose name contains "JMP" in the jump part.',
+                'The substring "JMP" is reserved within the jump part of a C instruction.',
             )
         jmp = strip_and_filter_all(jmp.split("JMP"))
 
@@ -306,11 +308,6 @@ def parse_C_instruction(line: str) -> CInstruction:
                     jmp_dest,
                 )
 
-            case _:
-                raise ParserException(
-                    line_num, cur_line, "Failed to parse jump part of instruction."
-                )
-
     return CInstruction(line_num, x, y, operation, dest, jmp)
 
 
@@ -318,6 +315,7 @@ def parse_line(line: str) -> BaseInstruction | None:
     global line_num, cur_line
 
     ret_value: BaseInstruction | None = None
+    line_num += 1
     cur_line = line
 
     if "@" in line:
@@ -335,22 +333,20 @@ def parse_line(line: str) -> BaseInstruction | None:
     else:
         ret_value = parse_C_instruction(line)
 
-    line_num += 1
-
     return ret_value
 
 
 def parse_lines(
-    file: list[str], output_file: TextIO | None = None
+    file: list[str],
 ) -> list[BaseInstruction] | list[AInstruction | CInstruction]:
     instructions: list[BaseInstruction] = []
     for line in file:
-        inst = parse_line(line)
+        try:
+            if (inst := parse_line(line)) is not None:
+                instructions.append(inst)
 
-        if inst is not None:
-            instructions.append(inst)
-
-            if output_file is not None:
-                output_file.write(f"{inst}\n")
+        except ParserException as e:
+            Context.exceptions.append(e)
+            continue
 
     return instructions

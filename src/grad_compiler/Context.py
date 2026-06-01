@@ -1,3 +1,9 @@
+from grad_compiler.Types.Exceptions import (
+    AssemblerException,
+    CompilerException,
+    ParserException,
+)
+
 default_symbols: dict[str, str] = (
     {f"M{idx}": f"M[{idx}]" for idx in range(0, 64)}
     | {f"DEV_IN_{idx}": f"M[{idx + 2**14}]" for idx in range(4)}
@@ -18,3 +24,4 @@ reserved: tuple[str, ...] = (
     "+",
 )
 available_memory: list[int] = list(range(64, 2**14, 1))
+exceptions: list[ParserException | AssemblerException | CompilerException] = []
