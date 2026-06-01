@@ -2,10 +2,7 @@ from grad_compiler import Assembler
 from grad_compiler.Types import Conditions, JumpType, Operand, OperandType, Operations
 from grad_compiler.Types.Instructions import BaseInstruction, CInstruction
 from grad_compiler.util import A_register, D_register, ONE_register, constant_operand
-
-from Test.util import (
-    write_lines_to_file,
-)
+from Test.util import write_lines_to_file
 
 
 def get_test_cases() -> list[BaseInstruction]:

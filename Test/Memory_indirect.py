@@ -1,10 +1,7 @@
 from grad_compiler.Types import Conditions, JumpType, Operations
 from grad_compiler.Types.Instructions import CInstruction
 from grad_compiler.util import ONE_register
-
-from Test.util import (
-    run_test_case,
-)
+from Test.util import run_test_case
 
 
 def run_test_cases():
