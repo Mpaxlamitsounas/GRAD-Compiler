@@ -31,7 +31,7 @@ def reset():
     if Options.use_dev_out_memory:
         Context.available_memory = list(range(16388, 16400))
 
-    if Options.shuffle_memory:
+    if Options.shuffle_variable_memory_pool:
         random.shuffle(Context.available_memory)
 
 
@@ -79,7 +79,8 @@ def process_file(file: str):
         Path.cwd() / "Output" / (file_path.stem + ".p"), "wt", encoding="utf-8"
     ) as file:
         parsed_instructions = Parser.parse_lines(lines)
-        file.writelines([f"{inst}\n" for inst in parsed_instructions])
+        if Options.output_intermediate_steps:
+            file.writelines([f"{inst}\n" for inst in parsed_instructions])
 
     # assemble
     assembled_instructions: list[AInstruction | CInstruction] | None = None
@@ -90,7 +91,8 @@ def process_file(file: str):
             assembled_instructions = Assembler.assemble_instructions(
                 parsed_instructions
             )
-            file.writelines([f"{inst}\n" for inst in assembled_instructions])
+            if Options.output_intermediate_steps:
+                file.writelines([f"{inst}\n" for inst in assembled_instructions])
 
     # compile
     if "C" in argv[1] and len(Context.exceptions) == 0:

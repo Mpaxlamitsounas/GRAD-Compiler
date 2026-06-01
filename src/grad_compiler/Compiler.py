@@ -25,7 +25,7 @@ def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:
 
 
 def compile_A_instruction(inst: AInstruction) -> bytes:
-    return int(inst.value).to_bytes(2, Options.byte_ordering)
+    return int(inst.value).to_bytes(2, Options.output_instruction_byte_ordering)
 
 
 def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
@@ -92,7 +92,7 @@ def compile_C_instruction(inst: CInstruction) -> bytes:
     # command selection
     value |= inst.op.bit_repr
 
-    return value.to_bytes(2, Options.byte_ordering)
+    return value.to_bytes(2, Options.output_instruction_byte_ordering)
 
 
 def compile_instruction(instruction: AInstruction | CInstruction) -> bytes:
