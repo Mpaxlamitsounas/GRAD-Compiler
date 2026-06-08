@@ -28,11 +28,11 @@ def reset():
     Context.symbols = default_symbols.copy()
     Context.exceptions = []
 
-    if Options.use_only_dev_out_memory:
-        Context.available_memory = list(range(16388, 16400))
-
     if Options.shuffle_variable_memory_pool:
         random.shuffle(Context.available_memory)
+
+    if Options.use_only_dev_out_memory:
+        Context.available_memory = list(range(16388, 16400))
 
 
 def get_last_frame(traceback: TracebackType) -> FrameType:

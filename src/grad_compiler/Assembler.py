@@ -706,7 +706,7 @@ def assemble_instructions(
     instructions: list[BaseInstruction],
 ) -> list[AInstruction | CInstruction]:
     instructions = decompress_instructions(instructions)
-    if Options.apply_post_optimisations:
+    if Options.apply_assembler_pattern_optimisations:
         instructions = apply_optimisations(instructions)
     instructions = substitute_jump_labels(instructions)
 
