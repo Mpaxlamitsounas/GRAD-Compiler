@@ -12,16 +12,5 @@ default_symbols: dict[str, str] = (
     | {"DEV_OUT_START_ADD": str(2**14 + 4)}
 )
 symbols: dict[str, str] = default_symbols.copy()
-# TODO
-reserved: tuple[str, ...] = (
-    "@",
-    ":=",
-    ":",
-    ";",
-    "IF",
-    "JMP",
-    "VAR",
-    "+",
-)
 available_memory: list[int] = list(range(64, 2**14, 1))
 exceptions: list[ParserException | AssemblerException | CompilerException] = []

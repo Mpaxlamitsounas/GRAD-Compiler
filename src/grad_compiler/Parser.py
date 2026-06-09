@@ -7,25 +7,21 @@ from grad_compiler.Types.Instructions import (
     CInstruction,
     LabelInstruction,
 )
-from grad_compiler.util import (
-    constant_operand,
-    is_valid_identifier_name,
-    strip_and_filter_all,
-)
+from grad_compiler.util import constant_operand, filter_all, is_valid_identifier_name
 
 line_num: int = 0
 cur_line: str = ""
 
 
 def parse_operand(operand: str) -> Operand:
-    if (operand := operand.strip()) == "":
+    if operand == "":
         raise ParserException(line_num, cur_line, "Tried to parse empty operand.")
 
     if operand[0] == "-":
         raise ParserException(
             line_num,
             cur_line,
-            "Values must be non negative, to introduce a negative value, use a NEG C instruction.",
+            "Values must be non negative, to introduce a negative value use the negation operation.",
         )
 
     if not is_valid_identifier_name(operand):
@@ -34,9 +30,6 @@ def parse_operand(operand: str) -> Operand:
             cur_line,
             f'Identifier "{operand}" contains disallowed characters (charset is [A-Z_]).',
         )
-
-    if operand in Context.reserved:
-        raise ParserException(line_num, cur_line, f'Operand "{operand}" is reserved.')
 
     elif any(
         [operand == "D", operand == "A", operand == "1", operand == "2", operand == "M"]
@@ -55,7 +48,7 @@ def parse_operand(operand: str) -> Operand:
 
 
 def parse_A_instruction(line: str) -> AInstruction:
-    value = line[1:].strip()
+    value = line[1:]
     if value == "":
         raise ParserException(
             line_num, cur_line, "A instruction must have non-empty value."
@@ -71,8 +64,8 @@ def parse_A_instruction(line: str) -> AInstruction:
     return AInstruction(line_num, value)
 
 
-def parse_alias(line: str) -> None:
-    split = strip_and_filter_all(line.split(":"))
+def parse_alias(line: str):
+    split = line.split(":")
     if len(split) != 2:
         raise ParserException(
             line_num,
@@ -108,8 +101,8 @@ def parse_jump_label(line: str) -> LabelInstruction:
     return LabelInstruction(line_num, name)
 
 
-def parse_variable(line: str) -> None:
-    name = line.replace("VAR ", "").strip()
+def parse_variable(line: str):
+    name = line.replace("VAR", "", 1)
     if line == "":
         raise ParserException(
             line_num, cur_line, "Variable declarations must have non-empty name."
@@ -143,6 +136,7 @@ def parse_C_instruction(line: str) -> CInstruction:
 
     # operation ; jmp
     if ";" in rest:
+        rest = rest.replace(";IF", ";")
         operation_str, jmp = rest.split(";")
 
     else:
@@ -154,8 +148,7 @@ def parse_C_instruction(line: str) -> CInstruction:
         operation = Operations.AND
 
     elif "|" in operation_str:
-        parts = strip_and_filter_all(operation_str.split("|"))
-        operation = Operations.OR if len(parts) == 2 else Operations.ABS
+        operation = Operations.OR if operation_str.count("|") == 1 else Operations.ABS
 
     elif "~" in operation_str:
         operation = Operations.NOT
@@ -164,7 +157,7 @@ def parse_C_instruction(line: str) -> CInstruction:
         operation = Operations.ADD
 
     elif "-" in operation_str:
-        parts = strip_and_filter_all(operation_str.split("-"))
+        parts = filter_all(operation_str.split("-"))
         operation = Operations.SUB if len(parts) == 2 else Operations.NEG
 
     elif "*" in operation_str:
@@ -186,10 +179,10 @@ def parse_C_instruction(line: str) -> CInstruction:
         operation = Operations.NOP
 
     try:
-        operands = strip_and_filter_all(operation_str.split(operation.symbol))
+        operands = filter_all(operation_str.split(operation.symbol))
     # empty separator (NOP)
     except ValueError:
-        operands = [operation_str.strip()] if operation_str.strip() != "" else []
+        operands = [operation_str]
 
     if len(operands) != operation.multiplicity.value:
         raise ParserException(
@@ -204,42 +197,34 @@ def parse_C_instruction(line: str) -> CInstruction:
         )
 
     if dest is not None:
-        dest = {parse_operand(d) for d in strip_and_filter_all(dest.split(","))}
+        dest = {parse_operand(d) for d in filter_all(dest.split(","))}
 
     if jmp is not None:
-        jmp = jmp.strip()
         has_dest: bool = not jmp.endswith("JMP")
-        if jmp.count("JMP") > 1:
+        jmp = filter_all(jmp.split("JMP"))
+        if len(jmp) > 2:
             raise ParserException(
                 line_num,
                 line,
                 'The substring "JMP" is reserved within the jump part of a C instruction.',
             )
-        jmp = strip_and_filter_all(jmp.split("JMP"))
 
         match len(jmp):
-            # compatibility case (already parsed)
+            # compatibility case (already parsed and always jump)
             case 0:
                 jmp = JumpType(Conditions.TRUE, constant_operand("0"), None)
 
             # has only destination, or comparison
             case 1:
+                jmp = jmp[0]
                 if has_dest:
                     jmp = JumpType(
                         Conditions.TRUE,
                         constant_operand("0"),
-                        (
-                            jmp[0]
-                            if jmp[0] not in Context.symbols
-                            else Context.symbols[jmp[0]]
-                        ),
+                        (jmp if jmp not in Context.symbols else Context.symbols[jmp]),
                     )
 
                 else:
-                    jmp = jmp[0]
-                    if jmp.startswith("IF"):
-                        jmp = jmp.replace("IF", "", 1).strip()
-
                     if "==" in jmp:
                         condition = Conditions.EQ
 
@@ -261,7 +246,7 @@ def parse_C_instruction(line: str) -> CInstruction:
                     else:
                         condition = Conditions.TRUE
 
-                    jmp = strip_and_filter_all(jmp.split(condition.value))[0]
+                    jmp = filter_all(jmp.split(condition.value))[0]
 
                     jmp = JumpType(
                         condition,
@@ -276,9 +261,6 @@ def parse_C_instruction(line: str) -> CInstruction:
                 )
 
                 jmp = jmp[0]
-                if jmp.startswith("IF"):
-                    jmp = jmp.replace("IF", "", 1).strip()
-
                 if "==" in jmp:
                     condition = Conditions.EQ
 
@@ -300,7 +282,7 @@ def parse_C_instruction(line: str) -> CInstruction:
                 else:
                     condition = Conditions.TRUE
 
-                jmp = strip_and_filter_all(jmp.split(condition.value))[0]
+                jmp = filter_all(jmp.split(condition.value))[0]
 
                 jmp = JumpType(
                     condition,
@@ -327,7 +309,7 @@ def parse_line(line: str) -> BaseInstruction | None:
     elif line.startswith("("):
         ret_value = parse_jump_label(line)
 
-    elif line.startswith("VAR "):
+    elif line.startswith("VAR"):
         parse_variable(line)
 
     else:
