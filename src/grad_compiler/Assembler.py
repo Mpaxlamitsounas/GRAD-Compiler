@@ -551,8 +551,15 @@ def substitute_jump_labels(
         if isinstance(inst, AInstruction):
             if inst.value in labels:
                 inst.value = labels[inst.value]
+                continue
 
-            elif not inst.value.isdigit():
+            try:
+                inst.value = str(int(inst.value, 0))
+
+            except ValueError:
+                pass
+
+            if not inst.value.isdigit():
                 # necessary for exception to have a traceback
                 try:
                     raise AssemblerException(
