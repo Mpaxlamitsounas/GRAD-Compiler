@@ -45,9 +45,12 @@ def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
             return False, "Instruction operands must be Simple for compilation."
 
     if any([r == A_register for r in [inst.x, inst.y]]) and any(
-            [is_M_register(reg) for reg in [inst.x, inst.y]]
+        [is_M_register(reg) for reg in [inst.x, inst.y]]
     ):
-        return False, "Can not utilise A register and memory at the same time.",
+        return (
+            False,
+            "Can not utilise A register and memory at the same time.",
+        )
 
     return True, ""
 
