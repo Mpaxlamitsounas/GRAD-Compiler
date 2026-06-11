@@ -44,21 +44,17 @@ def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
         ] and not is_M_register(reg):
             return False, "Instruction operands must be Simple for compilation."
 
+    if any([r == A_register for r in [inst.x, inst.y]]) and any(
+            [is_M_register(reg) for reg in [inst.x, inst.y]]
+    ):
+        return False, "Can not utilise A register and memory at the same time.",
+
     return True, ""
 
 
 def compile_C_instruction(inst: CInstruction) -> bytes:
     # flag bit
     value = 0x8000
-
-    if any([reg == A_register for reg in [inst.x, inst.y]]) and any(
-        [is_M_register(reg) for reg in [inst.x, inst.y]]
-    ):
-        raise CompilerException(
-            inst.line_num,
-            str(inst),
-            "Can not utilise A register and memory at the same time.",
-        )
 
     # memory bit
     value |= 0x4000 if any([is_M_register(inst.x), is_M_register(inst.y)]) else 0
@@ -89,7 +85,7 @@ def compile_C_instruction(inst: CInstruction) -> bytes:
     if inst.jmp is not None:
         value |= inst.jmp.condition.bit_repr << 4
 
-    # command selection
+    # operation selection
     value |= inst.op.bit_repr
 
     return value.to_bytes(2, Options.output_instruction_endianness)
