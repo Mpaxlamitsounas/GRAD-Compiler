@@ -41,7 +41,7 @@ class AInstruction(BaseInstruction):
         return AInstruction(self.line_num, self.value)
 
     def __str__(self):
-        return f"@{self.value}"
+        return f"@{int(self.value) if self.value.isdigit() else f"@{self.value}":#06x}"
 
     def __repr__(self):
         return self.__str__()
