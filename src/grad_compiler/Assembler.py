@@ -64,7 +64,7 @@ def calc_req_A(op: Operand) -> str:
         cur = cur.pointer
         loops += 1
 
-    return "M[" * loops + cur.value + "]" * loops if loops > 0 else cur.value
+    return "M[" * loops + cur.value + "]" * loops
 
 
 def _unravel_index(inst: CInstruction, op: Operand) -> list[BaseInstruction]:
