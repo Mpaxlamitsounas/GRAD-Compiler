@@ -217,13 +217,21 @@ def parse_C_instruction(line: str) -> CInstruction:
             # has only destination, or comparison
             case 1:
                 jmp = jmp[0]
+                # is jump destination
                 if has_dest:
-                    jmp = JumpType(
-                        Conditions.TRUE,
-                        constant_operand("0"),
-                        (jmp if jmp not in Context.symbols else Context.symbols[jmp]),
-                    )
+                    if jmp in Context.symbols:
+                        jmp = Context.symbols[jmp]
 
+                    if not is_valid_identifier_name(jmp, test_memory=False):
+                        raise ParserException(
+                            line_num,
+                            line,
+                            f"Jump destination {jmp} contains disallowed characters (charset is [A-Z_]).",
+                        )
+
+                    jmp = JumpType(Conditions.TRUE, constant_operand("0"), jmp)
+
+                # is jmp condition
                 else:
                     if "==" in jmp:
                         condition = Conditions.EQ
@@ -256,37 +264,50 @@ def parse_C_instruction(line: str) -> CInstruction:
 
             # has both condition and destination
             case 2:
-                jmp_dest = (
-                    jmp[1] if jmp[1] not in Context.symbols else Context.symbols[jmp[1]]
-                )
+                jmp_cond, jmp_dest = jmp
+                if jmp_dest in Context.symbols:
+                    jmp_dest = Context.symbols[jmp_dest]
 
-                jmp = jmp[0]
-                if "==" in jmp:
+                if not is_valid_identifier_name(jmp_dest, test_memory=False):
+                    raise ParserException(
+                        line_num,
+                        line,
+                        f"Jump destination contains {jmp_dest} disallowed characters (charset is [A-Z_]).",
+                    )
+
+                if "==" in jmp_cond:
                     condition = Conditions.EQ
 
-                elif "!=" in jmp:
+                elif "!=" in jmp_cond:
                     condition = Conditions.NE
 
-                elif "<=" in jmp:
+                elif "<=" in jmp_cond:
                     condition = Conditions.LE
 
-                elif ">=" in jmp:
+                elif ">=" in jmp_cond:
                     condition = Conditions.GE
 
-                elif "<" in jmp:
+                elif "<" in jmp_cond:
                     condition = Conditions.LT
 
-                elif ">" in jmp:
+                elif ">" in jmp_cond:
                     condition = Conditions.GT
 
                 else:
                     condition = Conditions.TRUE
 
-                jmp = filter_all(jmp.split(condition.value))[0]
+                jmp_cond_split = filter_all(jmp_cond.split(condition.value))
+                if len(jmp_cond_split) > 1:
+                    raise ParserException(
+                        line_num,
+                        line,
+                        f"Jump condition must have only one operand on the right hand side.",
+                    )
 
+                jmp_cond = jmp_cond_split[0]
                 jmp = JumpType(
                     condition,
-                    parse_operand(jmp),
+                    parse_operand(jmp_cond),
                     jmp_dest,
                 )
 
