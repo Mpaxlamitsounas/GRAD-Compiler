@@ -11,21 +11,24 @@ from grad_compiler.util import (
 )
 
 
-def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str, int | None]:
-    if not inst.value.isdigit():
-        return False, "A instruction value must be numeric.", None
+def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str | None]:
+    try:
+        value = int(inst.value, 0)
 
-    if (value := int(inst.value)) < 0:
-        return False, "A instruction value must be non negative.", value
+    except ValueError:
+        return False, "A instruction value must be numeric."
+
+    if value < 0:
+        return False, "A instruction value must be non negative."
 
     if value > 2**15 - 1:
-        return False, "A instruction value must be at most 2^15 - 1.", value
+        return False, "A instruction value must be at most 2^15 - 1."
 
-    return True, "", value
+    return True, ""
 
 
 def compile_A_instruction(inst: AInstruction) -> bytes:
-    return int(inst.value).to_bytes(2, Options.output_instruction_endianness)
+    return int(inst.value, 0).to_bytes(2, Options.output_instruction_endianness)
 
 
 def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
@@ -96,7 +99,7 @@ def compile_C_instruction(inst: CInstruction) -> bytes:
 
 def compile_instruction(instruction: AInstruction | CInstruction) -> bytes:
     if isinstance(instruction, AInstruction):
-        is_valid, err_msg, value = check_A_inst_validity(instruction)
+        is_valid, err_msg = check_A_inst_validity(instruction)
         if not is_valid:
             raise CompilerException(instruction.line_num, str(instruction), err_msg)
 
