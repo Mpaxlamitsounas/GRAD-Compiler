@@ -137,7 +137,9 @@ def parse_C_instruction(line: str) -> CInstruction:
     # operation ; jmp
     if ";" in rest:
         rest = rest.replace(";IF", ";")
-        operation_str, jmp = rest.split(";")
+        if len(split := rest.split(";")) > 2:
+            raise ParserException(line_num, line, f'Too many ";" in line {line}, must have 1 at most.')
+        operation_str, jmp = split
 
     else:
         jmp = None
@@ -201,12 +203,11 @@ def parse_C_instruction(line: str) -> CInstruction:
 
     if jmp is not None:
         has_dest: bool = not jmp.endswith("JMP")
-        jmp = filter_all(jmp.split("JMP"))
-        if len(jmp) > 2:
+        if len(jmp := filter_all(jmp.split("JMP"))) > 2:
             raise ParserException(
                 line_num,
                 line,
-                'The substring "JMP" is reserved within the jump part of a C instruction.',
+                'The substring "JMP" is a reserved keyword within the jump part of a C instruction by the GRAD Compiler.',
             )
 
         match len(jmp):

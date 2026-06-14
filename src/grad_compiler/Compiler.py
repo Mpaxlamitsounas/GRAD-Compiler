@@ -52,7 +52,7 @@ def check_C_inst_validity(inst: CInstruction) -> tuple[bool, str]:
     ):
         return (
             False,
-            "Can not utilise A register and memory at the same time.",
+            "GRAD Machine can not utilise A register and memory at the same time.",
         )
 
     return True, ""

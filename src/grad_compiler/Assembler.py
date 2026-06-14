@@ -52,7 +52,10 @@ def check_inst_validity(inst: CInstruction) -> tuple[bool, str]:
     if any([A_register == inst.x, A_register == inst.y]) and any(
         [is_M_register(inst.x), inst.y is not None and is_M_register(inst.y)]
     ):
-        return False, "Can not utilise A register and memory at the same time."
+        return (
+            False,
+            "GRAD Machine can not utilise A register and memory at the same time.",
+        )
 
     return True, ""
 
