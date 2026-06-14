@@ -316,14 +316,14 @@ def _decompress_binary_operation(
             )
 
 
-def _decompress_operation_part(inst: CInstruction, instructions: list[BaseInstruction]):
+def _decompress_operation_section(inst: CInstruction, instructions: list[BaseInstruction]):
     if inst.y is None:
         _decompress_unary_operation(inst, instructions)
     else:
         _decompress_binary_operation(inst, instructions)
 
 
-def _decompress_destination_part(
+def _decompress_destination_section(
     inst: CInstruction, instructions: list[BaseInstruction]
 ):
     global cur_A
@@ -384,7 +384,7 @@ def _decompress_destination_part(
         cur_A = None
 
 
-def _decompress_jmp_condition_part(
+def _decompress_jmp_condition_section(
     inst: CInstruction, instructions: list[BaseInstruction]
 ):
     global cur_A
@@ -437,7 +437,7 @@ def _decompress_jmp_condition_part(
         prev_inst.jmp = None
 
 
-def _decompress_jmp_destination_part(
+def _decompress_jmp_destination_section(
     inst: CInstruction, instructions: list[BaseInstruction]
 ):
     global cur_A
@@ -492,11 +492,11 @@ def decompress_C_instruction(inst: CInstruction) -> list[BaseInstruction]:
     if inst.op.multiplicity == Multiplicity.UNARY:
         inst.y = None
 
-    _decompress_operation_part(inst, instructions)
-    _decompress_destination_part(inst, instructions)
+    _decompress_operation_section(inst, instructions)
+    _decompress_destination_section(inst, instructions)
     if inst.jmp is not None:
-        _decompress_jmp_condition_part(inst, instructions)
-        _decompress_jmp_destination_part(inst, instructions)
+        _decompress_jmp_condition_section(inst, instructions)
+        _decompress_jmp_destination_section(inst, instructions)
 
     return instructions
 
@@ -583,7 +583,7 @@ def _optimise_C_inst_dest_merge(
         if (
             isinstance(prev_inst, CInstruction)
             and isinstance(cur_inst, CInstruction)
-            and all(  # identical comp part and no dependencies
+            and all(  # identical comp section and no dependencies
                 [
                     prev_inst.x == cur_inst.x,
                     prev_inst.y == cur_inst.y,

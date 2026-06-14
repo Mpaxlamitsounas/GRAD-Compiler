@@ -207,7 +207,7 @@ def parse_C_instruction(line: str) -> CInstruction:
             raise ParserException(
                 line_num,
                 line,
-                'The substring "JMP" is a reserved keyword within the jump part of a C instruction by the GRAD Compiler.',
+                'The substring "JMP" is a reserved keyword within the jump section of a C instruction by the GRAD Compiler.',
             )
 
         match len(jmp):
