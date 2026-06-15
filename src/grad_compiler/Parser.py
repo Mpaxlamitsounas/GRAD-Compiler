@@ -74,7 +74,8 @@ def parse_alias(line: str):
         )
 
     for name in split:
-        if not is_valid_identifier_name(name):
+        # if not register or memory address, must be constant
+        if not is_valid_identifier_name(name, test_memory=False) or name in ["D", "A", "M"]:
             raise ParserException(
                 line_num,
                 cur_line,
