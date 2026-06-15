@@ -560,11 +560,15 @@ def substitute_jump_labels(
                 inst.value = str(int(inst.value, 0))
 
             except ValueError:
-                raise AssemblerException(
-                    inst.line_num,
-                    str(inst),
-                    "A instruction value must be numeric or a numeric alias.",
-                )
+                try: # necessary mess to get stacktrace
+                    raise AssemblerException(
+                        inst.line_num,
+                        str(inst),
+                        "A instruction value must be numeric or a numeric alias.",
+                    )
+
+                except AssemblerException:
+                    pass
 
     # no BaseInstruction instances are ever added, and all LabelInstruction instances are removed here
     # noinspection PyTypeChecker
