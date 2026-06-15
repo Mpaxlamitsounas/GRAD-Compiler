@@ -24,11 +24,11 @@ def parse_operand(operand: str) -> Operand:
             "Values must be non negative, to introduce a negative value use the negation operation.",
         )
 
-    if not is_valid_identifier_name(operand):
+    if not is_valid_identifier_name(operand, test_memory=True, allow_registers=True):
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{operand}" contains disallowed characters (charset is [A-Z_]).',
+            f'Identifier "{operand}" contains disallowed characters (charset is [A-Z0-9_]).',
         )
 
     elif any(
@@ -58,7 +58,7 @@ def parse_A_instruction(line: str) -> AInstruction:
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{value}" contains disallowed characters (charset is [A-Z_]).',
+            f'Identifier "{value}" contains disallowed characters (charset is [A-Z0-9_]) or is reserved.',
         )
 
     return AInstruction(line_num, value)
@@ -74,12 +74,11 @@ def parse_alias(line: str):
         )
 
     for name in split:
-        # if not register or memory address, must be constant
-        if not is_valid_identifier_name(name, test_memory=False) or name in ["D", "A", "M"]:
+        if not is_valid_identifier_name(name):
             raise ParserException(
                 line_num,
                 cur_line,
-                f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
+                f'Identifier "{name}" contains disallowed characters (charset is [A-Z0-9_]) or is reserved.',
             )
 
     Context.symbols[split[0]] = split[1]
@@ -92,11 +91,16 @@ def parse_jump_label(line: str) -> LabelInstruction:
             line_num, cur_line, "Jump labels must have non-empty name."
         )
 
+    if name.isdigit():
+        raise ParserException(
+            line_num, cur_line, "Jump labels must contain alphabetic characters."
+        )
+
     if not is_valid_identifier_name(name):
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
+            f'Identifier "{name}" contains disallowed characters (charset is [A-Z0-9_]) or is reserved.',
         )
 
     return LabelInstruction(line_num, name)
@@ -113,7 +117,7 @@ def parse_variable(line: str):
         raise ParserException(
             line_num,
             cur_line,
-            f'Identifier "{name}" contains disallowed characters (charset is [A-Z_]).',
+            f'Identifier "{name}" contains disallowed characters (charset is [A-Z0-9_]).',
         )
 
     try:
@@ -139,7 +143,9 @@ def parse_C_instruction(line: str) -> CInstruction:
     if ";" in rest:
         rest = rest.replace(";IF", ";")
         if len(split := rest.split(";")) > 2:
-            raise ParserException(line_num, line, f'Too many ";" in line {line}, must have 1 at most.')
+            raise ParserException(
+                line_num, line, f'Too many ";" in line {line}, must have 1 at most.'
+            )
         operation_str, jmp = split
 
     else:
@@ -224,11 +230,11 @@ def parse_C_instruction(line: str) -> CInstruction:
                     if jmp in Context.symbols:
                         jmp = Context.symbols[jmp]
 
-                    if not is_valid_identifier_name(jmp, test_memory=False):
+                    if not is_valid_identifier_name(jmp):
                         raise ParserException(
                             line_num,
                             line,
-                            f"Jump destination {jmp} contains disallowed characters (charset is [A-Z_]).",
+                            f"Jump destination {jmp} contains disallowed characters (charset is [A-Z0-9_]).",
                         )
 
                     jmp = JumpType(Conditions.TRUE, constant_operand("0"), jmp)
@@ -270,11 +276,11 @@ def parse_C_instruction(line: str) -> CInstruction:
                 if jmp_dest in Context.symbols:
                     jmp_dest = Context.symbols[jmp_dest]
 
-                if not is_valid_identifier_name(jmp_dest, test_memory=False):
+                if not is_valid_identifier_name(jmp_dest):
                     raise ParserException(
                         line_num,
                         line,
-                        f"Jump destination contains {jmp_dest} disallowed characters (charset is [A-Z_]).",
+                        f"Jump destination contains {jmp_dest} disallowed characters (charset is [A-Z0-9_]).",
                     )
 
                 if "==" in jmp_cond:

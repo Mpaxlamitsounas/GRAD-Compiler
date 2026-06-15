@@ -316,7 +316,9 @@ def _decompress_binary_operation(
             )
 
 
-def _decompress_operation_section(inst: CInstruction, instructions: list[BaseInstruction]):
+def _decompress_operation_section(
+    inst: CInstruction, instructions: list[BaseInstruction]
+):
     if inst.y is None:
         _decompress_unary_operation(inst, instructions)
     else:
@@ -560,7 +562,7 @@ def substitute_jump_labels(
                 inst.value = str(int(inst.value, 0))
 
             except ValueError:
-                try: # necessary mess to get stacktrace
+                try:  # necessary mess to get stacktrace
                     raise AssemblerException(
                         inst.line_num,
                         str(inst),
