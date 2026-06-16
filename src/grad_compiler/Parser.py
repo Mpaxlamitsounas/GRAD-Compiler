@@ -103,6 +103,7 @@ def parse_jump_label(line: str) -> LabelInstruction:
             f'Identifier "{name}" contains disallowed characters (charset is [A-Z0-9_]) or is reserved.',
         )
 
+    # instruction to keep it in the instruction list in order to retain ordering
     return LabelInstruction(line_num, name)
 
 

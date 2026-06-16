@@ -17,6 +17,7 @@ class BaseInstruction:
         raise NotImplemented
 
 
+# instruction to keep it in the instruction list in order to retain ordering
 class LabelInstruction(BaseInstruction):
     def __init__(self, line_num: int, value: str):
         super().__init__(line_num)
