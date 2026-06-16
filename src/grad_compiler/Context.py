@@ -11,6 +11,7 @@ default_symbols: dict[str, str] = (
     | {"DEV_IN_START_ADD": str(2**14)}
     | {"DEV_OUT_START_ADD": str(2**14 + 4)}
 )
+default_available_memory: list[int] = list(range(64, 2**14, 1))
 symbols: dict[str, str] = default_symbols.copy()
-available_memory: list[int] = list(range(64, 2**14, 1))
+available_memory: list[int] = default_available_memory.copy()
 exceptions: list[ParserException | AssemblerException | CompilerException] = []

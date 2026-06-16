@@ -6,7 +6,6 @@ from sys import argv
 from types import FrameType, TracebackType
 
 from grad_compiler import Assembler, Compiler, Context, Options, Parser, Preprocessor
-from grad_compiler.Context import default_symbols
 from grad_compiler.Types.Exceptions import (
     AssemblerException,
     GradException,
@@ -25,7 +24,8 @@ def reset():
     Assembler.cur_A = None
     Parser.line_num = 0
     Parser.cur_line = ""
-    Context.symbols = default_symbols.copy()
+    Context.symbols = Context.default_symbols.copy()
+    Context.available_memory = Context.default_available_memory.copy()
     Context.exceptions = []
 
     if Options.shuffle_variable_memory_pool:
