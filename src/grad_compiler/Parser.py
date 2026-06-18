@@ -134,7 +134,7 @@ def parse_variable(line: str):
         raise ParserException(
             line_num,
             cur_line,
-            f"No memory address available to assign to variable {name}.",
+            f'No memory address available to assign to variable "{name}".',
         )
 
     except KeyError:
@@ -156,7 +156,7 @@ def parse_C_instruction(line: str) -> CInstruction:
         rest = rest.replace(";IF", ";")
         if len(split := rest.split(";")) > 2:
             raise ParserException(
-                line_num, line, f'Too many ";" in line {line}, must have 1 at most.'
+                line_num, line, f'Too many ";" in line "{line}", must have 1 at most.'
             )
         operation_str, jmp = split
 
@@ -246,7 +246,7 @@ def parse_C_instruction(line: str) -> CInstruction:
                         raise ParserException(
                             line_num,
                             line,
-                            f"Jump destination {jmp} contains disallowed characters (charset is [A-Z0-9_]).",
+                            f'Jump destination "{jmp}" contains disallowed characters (charset is [A-Z0-9_]).',
                         )
 
                     jmp = JumpType(Conditions.TRUE, constant_operand("0"), jmp)
@@ -292,7 +292,7 @@ def parse_C_instruction(line: str) -> CInstruction:
                     raise ParserException(
                         line_num,
                         line,
-                        f"Jump destination contains {jmp_dest} disallowed characters (charset is [A-Z0-9_]).",
+                        f'Jump destination "{jmp_dest}" contains disallowed characters (charset is [A-Z0-9_]).',
                     )
 
                 if "==" in jmp_cond:
