@@ -66,3 +66,11 @@ class OperationType:
             return self.symbol + "{}"
         else:
             return "{} " + self.symbol + " {}"
+
+
+class SymbolStore(dict[str, str]):
+    def __setitem__(self, key, value):
+        if key in self:
+            raise KeyError
+
+        super().__setitem__(key, value)

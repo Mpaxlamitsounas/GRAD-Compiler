@@ -9,8 +9,8 @@ from grad_compiler.Types.Instructions import (
 )
 from grad_compiler.util import constant_operand, filter_all, is_valid_identifier_name
 
-line_num: int = 0
-cur_line: str = ""
+line_num: int
+cur_line: str
 
 
 def parse_operand(operand: str) -> Operand:
@@ -81,7 +81,13 @@ def parse_alias(line: str):
                 f'Identifier "{name}" contains disallowed characters (charset is [A-Z0-9_]) or is reserved.',
             )
 
-    Context.symbols[split[0]] = split[1]
+    try:
+        Context.symbols[split[0]] = split[1]
+
+    except KeyError:
+        raise ParserException(
+            line_num, line, f'Identifier "{split[0]}" has already been defined.'
+        )
 
 
 def parse_jump_label(line: str) -> LabelInstruction:
@@ -129,6 +135,11 @@ def parse_variable(line: str):
             line_num,
             cur_line,
             f"No memory address available to assign to variable {name}.",
+        )
+
+    except KeyError:
+        raise ParserException(
+            line_num, line, f'Identifier "{name}" has already been defined.'
         )
 
 

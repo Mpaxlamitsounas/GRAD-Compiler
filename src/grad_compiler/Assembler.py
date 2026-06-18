@@ -25,7 +25,7 @@ from grad_compiler.util import (
 )
 
 # None represents unknown
-cur_A: str | None = None
+cur_A: str | None
 
 
 def decompress_A_instruction(inst: AInstruction) -> list[BaseInstruction]:
