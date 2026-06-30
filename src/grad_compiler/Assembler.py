@@ -622,7 +622,7 @@ def _optimise_C_inst_dest_merge(
     return optim_instructions
 
 
-def _optimise_C_inst_redundant_A_assign_make_inline(
+def _optimise_C_inst_redundant_D_assign_make_inline(
     instructions: list[BaseInstruction],
 ) -> list[BaseInstruction]:
     if len(instructions) < 2:
@@ -636,7 +636,8 @@ def _optimise_C_inst_redundant_A_assign_make_inline(
             and isinstance(cur_inst, CInstruction)
             and all(
                 [
-                    prev_inst.x == A_register,
+                    prev_inst.x.type == OperandType.Register,
+                    not is_M_register(prev_inst.x),
                     prev_inst.op == Operations.NOP,
                     prev_inst.jmp is None,
                     prev_inst.dest == {D_register},
@@ -645,11 +646,12 @@ def _optimise_C_inst_redundant_A_assign_make_inline(
                 ]
             )
         ):
-            del optim_instructions[-1]
             if cur_inst.x == D_register:
-                cur_inst.x = A_register
+                cur_inst.x = prev_inst.x
             else:
-                cur_inst.y = A_register
+                cur_inst.y = prev_inst.x
+
+            del optim_instructions[-1]
 
         optim_instructions.append(cur_inst)
         prev_inst = cur_inst
@@ -702,7 +704,7 @@ def _optimise_A_inst_unused_A_load(
 
 def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
     instructions = _optimise_C_inst_dest_merge(instructions)
-    instructions = _optimise_C_inst_redundant_A_assign_make_inline(instructions)
+    instructions = _optimise_C_inst_redundant_D_assign_make_inline(instructions)
     instructions = _optimise_C_inst_remove_self_assign(instructions)
     instructions = _optimise_A_inst_unused_A_load(instructions)
 
