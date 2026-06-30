@@ -1,39 +1,24 @@
 #!./bin/python3
-import random
-import sys
 from pathlib import Path
 from sys import argv
 from types import FrameType, TracebackType
 
-from grad_compiler import Assembler, Compiler, Context, Options, Parser, Preprocessor
-from grad_compiler.Types import SymbolStore
+from grad_compiler import (
+    Assembler,
+    Compiler,
+    Context,
+    Options,
+    Parser,
+    Preprocessor,
+    initialise,
+    reset,
+)
 from grad_compiler.Types.Exceptions import (
     AssemblerException,
     GradException,
     ParserException,
 )
 from grad_compiler.Types.Instructions import AInstruction, CInstruction
-
-
-def initialise():
-    random.seed("E20075")
-    (Path.cwd() / "Output").mkdir(exist_ok=True)
-    sys.argv[1] = sys.argv[1].upper()
-
-
-def reset():
-    Assembler.cur_A = None
-    Parser.line_num = 0
-    Parser.cur_line = ""
-    Context.symbols = SymbolStore(Context.default_symbols)
-    Context.available_memory = Context.default_available_memory.copy()
-    Context.exceptions = []
-
-    if Options.shuffle_variable_memory_pool:
-        random.shuffle(Context.available_memory)
-
-    if Options.use_only_dev_out_memory:
-        Context.available_memory = list(range(16388, 16400))
 
 
 def get_last_frame(traceback: TracebackType) -> FrameType:
@@ -123,10 +108,9 @@ Functions:
     initialise()
 
     for file in argv[2:]:
-        reset()
-
         try:
             process_file(file)
+            reset()
 
         except KeyboardInterrupt:
             print("Received interrupt, exiting.")

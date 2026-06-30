@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from pathlib import Path
 
-from grad_compiler import Assembler, Parser
+from grad_compiler import Assembler, Parser, reset
 from grad_compiler.Types import Operand
 from grad_compiler.Types.Instructions import BaseInstruction
 
@@ -35,7 +35,7 @@ def run_test_case(value_set: list[str], inst_builder: Callable, filename: Path |
 
     results: list[BaseInstruction | str] = []
     for case in cases:
-        Assembler.cur_A = None
+        reset()
         values = get_inst_values(value_set.copy(), case)
         inst = inst_builder(values)
         results.extend([inst, "---", *Assembler.assemble_instructions([inst]), ""])

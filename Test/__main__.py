@@ -7,6 +7,8 @@ import Memory_indirect
 import Mixed
 import Sequences
 
+from grad_compiler import initialise
+
 
 def run_tests():
     Constants.run_test_cases()
@@ -18,5 +20,5 @@ def run_tests():
 
 
 if __name__ == "__main__":
-    (Path.cwd() / "Output").mkdir(exist_ok=True)
+    initialise()
     run_tests()
