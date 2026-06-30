@@ -13,6 +13,7 @@ def reset():
     Context.symbols = SymbolStore(Context.default_symbols)
     Context.available_memory = Context.default_available_memory.copy()
     Context.exceptions = []
+    random.seed("E20075")
 
     if Options.shuffle_variable_memory_pool:
         random.shuffle(Context.available_memory)
@@ -22,7 +23,6 @@ def reset():
 
 
 def initialise():
-    random.seed("E20075")
     (Path.cwd() / "Output").mkdir(exist_ok=True)
     if len(sys.argv) > 1:
         sys.argv[1] = sys.argv[1].upper()
