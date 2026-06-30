@@ -84,7 +84,7 @@ class CInstruction(BaseInstruction):
 
     def __str__(self):
         s = (
-            f"{", ".join([str(d) for d in self.dest])} := "
+            f"{", ".join([str(d) for d in sorted(list(self.dest), key=lambda x: x.value)])} := "
             if len(self.dest) > 0
             else ""
         )
