@@ -702,6 +702,57 @@ def _optimise_A_inst_unused_A_load(
     return optim_instructions
 
 
+def _optimise_C_inst_unnecessary_intermediary_assign(
+    instructions: list[BaseInstruction],
+) -> list[BaseInstruction]:
+    if len(instructions) < 3:
+        return instructions
+
+    optim_instructions: list[BaseInstruction] = instructions[:2]
+    prev2_inst, prev_inst = instructions[0], instructions[1]
+    for cur_inst in instructions[2:]:
+        if (
+            isinstance(prev2_inst, CInstruction)
+            and isinstance(prev_inst, AInstruction)
+            and isinstance(cur_inst, CInstruction)
+            and all([
+                all([
+                    any([
+                        reg == D_register,
+                        reg == ONE_register,
+                        reg == TWO_register,
+                    ])
+                    for reg in [prev2_inst.x, prev2_inst.y]
+                    if reg is not None
+                ]),
+                prev2_inst.dest == {D_register},
+                prev2_inst.jmp is None,
+                cur_inst.x == D_register,
+                cur_inst.op.multiplicity == Multiplicity.UNARY,
+                all([not is_M_register(op) for op in cur_inst.dest]),
+                (
+                    all([
+                        cur_inst.jmp.compared is None
+                        or cur_inst.jmp.compared.value == "0",
+                        cur_inst.jmp.destination is None,
+                    ])
+                    if cur_inst.jmp is not None
+                    else True
+                ),
+            ])
+        ):
+            cur_inst.x = prev2_inst.x
+            cur_inst.y = prev2_inst.y
+            cur_inst.op = prev2_inst.op
+
+            del optim_instructions[-2]
+
+        optim_instructions.append(cur_inst)
+        prev2_inst, prev_inst = prev_inst, cur_inst
+
+    return optim_instructions
+
+
 def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruction]:
     instructions = _optimise_C_inst_dest_merge(instructions)
     instructions = _optimise_C_inst_redundant_D_assign_make_inline(instructions)
