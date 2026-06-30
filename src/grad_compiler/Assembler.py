@@ -38,12 +38,10 @@ def decompress_A_instruction(inst: AInstruction) -> list[BaseInstruction]:
 
 
 def check_inst_validity(inst: CInstruction) -> tuple[bool, str]:
-    if any(
-        [
-            d.type == OperandType.Constant or d == ONE_register or d == TWO_register
-            for d in inst.dest
-        ]
-    ):
+    if any([
+        d.type == OperandType.Constant or d == ONE_register or d == TWO_register
+        for d in inst.dest
+    ]):
         return False, "Can only assign to registers A, M, or D."
 
     if len([d for d in inst.dest if is_M_register(d)]) > 1:
@@ -150,12 +148,10 @@ def _decompress_binary_operation(
     global cur_A
 
     # instruction has already been decompressed
-    if all(
-        [
-            all([reg.type == OperandType.Register, reg.pointer is None])
-            for reg in [inst.x, inst.y]
-        ]
-    ):
+    if all([
+        all([reg.type == OperandType.Register, reg.pointer is None])
+        for reg in [inst.x, inst.y]
+    ]):
         instructions.append(inst.copy())
         return
 
@@ -166,18 +162,16 @@ def _decompress_binary_operation(
 
             if inst.x.value != inst.y.value:
                 x_reg = D_register
-                instructions.extend(
-                    [
-                        CInstruction(
-                            inst.line_num,
-                            A_register,
-                            None,
-                            Operations.NOP,
-                            {D_register},
-                        ),
-                        AInstruction(inst.line_num, inst.y.value),
-                    ]
-                )
+                instructions.extend([
+                    CInstruction(
+                        inst.line_num,
+                        A_register,
+                        None,
+                        Operations.NOP,
+                        {D_register},
+                    ),
+                    AInstruction(inst.line_num, inst.y.value),
+                ])
 
             else:
                 x_reg = A_register
@@ -346,13 +340,11 @@ def _decompress_destination_section(
             del instructions[-1]
             # inst utilises A or M registers in computation
             if any(
-                any(
-                    [
-                        is_M_register(reg),
-                        reg == A_register,
-                        reg.type == OperandType.Constant,
-                    ]
-                )
+                any([
+                    is_M_register(reg),
+                    reg == A_register,
+                    reg.type == OperandType.Constant,
+                ])
                 for reg in [inst.x, inst.y]
                 if reg is not None
             ):
@@ -463,14 +455,12 @@ def _decompress_jmp_destination_section(
         else:
             del instructions[-1]
 
-        instructions.extend(
-            [
-                AInstruction(inst.line_num, prev_jmp.destination),
-                CInstruction(
-                    inst.line_num, D_register, None, Operations.NOP, set(), prev_jmp
-                ),
-            ]
-        )
+        instructions.extend([
+            AInstruction(inst.line_num, prev_jmp.destination),
+            CInstruction(
+                inst.line_num, D_register, None, Operations.NOP, set(), prev_jmp
+            ),
+        ])
 
         cur_A = prev_jmp.destination
 
@@ -589,16 +579,14 @@ def _optimise_C_inst_dest_merge(
         if (
             isinstance(prev_inst, CInstruction)
             and isinstance(cur_inst, CInstruction)
-            and all(  # identical comp section and no dependencies
-                [
-                    prev_inst.x == cur_inst.x,
-                    prev_inst.y == cur_inst.y,
-                    prev_inst.op == cur_inst.op,
-                    prev_inst.jmp is None,
-                    cur_inst.x not in prev_inst.dest,
-                    cur_inst.y not in prev_inst.dest,
-                ]
-            )  # no memory dependencies
+            and all([  # identical comp section and no dependencies
+                prev_inst.x == cur_inst.x,
+                prev_inst.y == cur_inst.y,
+                prev_inst.op == cur_inst.op,
+                prev_inst.jmp is None,
+                cur_inst.x not in prev_inst.dest,
+                cur_inst.y not in prev_inst.dest,
+            ])  # no memory dependencies
             and (
                 A_register not in prev_inst.dest
                 or (
@@ -634,17 +622,15 @@ def _optimise_C_inst_redundant_D_assign_make_inline(
         if (
             isinstance(prev_inst, CInstruction)
             and isinstance(cur_inst, CInstruction)
-            and all(
-                [
-                    prev_inst.x.type == OperandType.Register,
-                    not is_M_register(prev_inst.x),
-                    prev_inst.op == Operations.NOP,
-                    prev_inst.jmp is None,
-                    prev_inst.dest == {D_register},
-                    cur_inst.op != Operations.NOP,
-                    cur_inst.x == D_register or cur_inst.y == D_register,
-                ]
-            )
+            and all([
+                prev_inst.x.type == OperandType.Register,
+                not is_M_register(prev_inst.x),
+                prev_inst.op == Operations.NOP,
+                prev_inst.jmp is None,
+                prev_inst.dest == {D_register},
+                cur_inst.op != Operations.NOP,
+                cur_inst.x == D_register or cur_inst.y == D_register,
+            ])
         ):
             if cur_inst.x == D_register:
                 cur_inst.x = prev_inst.x
@@ -667,13 +653,11 @@ def _optimise_C_inst_remove_self_assign(
 
     optim_instructions: list[BaseInstruction] = []
     for inst in instructions:
-        if isinstance(inst, CInstruction) and all(
-            [
-                all([inst.x == d for d in inst.dest]),
-                inst.y is None,
-                inst.op == Operations.NOP,
-            ]
-        ):
+        if isinstance(inst, CInstruction) and all([
+            all([inst.x == d for d in inst.dest]),
+            inst.y is None,
+            inst.op == Operations.NOP,
+        ]):
             if inst.jmp is None:
                 continue
             else:
@@ -758,6 +742,7 @@ def apply_optimisations(instructions: list[BaseInstruction]) -> list[BaseInstruc
     instructions = _optimise_C_inst_redundant_D_assign_make_inline(instructions)
     instructions = _optimise_C_inst_remove_self_assign(instructions)
     instructions = _optimise_A_inst_unused_A_load(instructions)
+    instructions = _optimise_C_inst_unnecessary_intermediary_assign(instructions)
 
     return instructions
 
