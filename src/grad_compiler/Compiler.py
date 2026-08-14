@@ -11,7 +11,7 @@ from grad_compiler.util import (
 )
 
 
-def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str | None]:
+def check_A_inst_validity(inst: AInstruction) -> tuple[bool, str]:
     try:
         value = int(inst.value, 0)
 

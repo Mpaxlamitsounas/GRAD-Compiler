@@ -331,6 +331,7 @@ def parse_C_instruction(line: str) -> CInstruction:
                     jmp_dest,
                 )
 
+    # noinspection PyTypeChecker
     return CInstruction(line_num, x, y, operation, dest, jmp)
 
 

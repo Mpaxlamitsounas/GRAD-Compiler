@@ -390,7 +390,7 @@ def _decompress_jmp_condition_section(
         # Every decompress step caps the instruction list with a C inst
         # noinspection PyTypeChecker
         prev_inst: CInstruction = instructions[-1]
-
+        assert prev_inst.jmp is not None
         prev_inst.dest.add(D_register)
 
         match inst.jmp.compared.type:
