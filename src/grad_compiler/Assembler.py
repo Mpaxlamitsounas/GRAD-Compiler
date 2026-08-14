@@ -60,6 +60,7 @@ def check_inst_validity(inst: CInstruction) -> tuple[bool, str]:
 
 def calc_req_A(op: Operand) -> str:
     cur = op.pointer
+    assert cur is not None
     loops: int = 0
     while cur.pointer is not None:
         cur = cur.pointer
@@ -75,6 +76,7 @@ def _unravel_index(inst: CInstruction, op: Operand) -> list[BaseInstruction]:
     unraveled_instructions: list[BaseInstruction] = []
 
     cur = op.pointer
+    assert cur is not None
     loops: int = 0
     while cur.pointer is not None:
         unraveled_instructions.append(
@@ -146,6 +148,9 @@ def _decompress_binary_operation(
     inst: CInstruction, instructions: list[BaseInstruction]
 ):
     global cur_A
+
+    # to appease the type checker, should have been inferred but it wasn't
+    assert inst.y is not None
 
     # instruction has already been decompressed
     if all([
@@ -224,7 +229,7 @@ def _decompress_binary_operation(
                 )
             )
 
-        # most operations are commutative, but NEG is not, so this is needed
+        # most operations are commutative, but SUB is not, so this is needed
         case OperandType.Constant, OperandType.Register:
             if inst.x.value != cur_A:
                 instructions.append(
@@ -295,9 +300,7 @@ def _decompress_binary_operation(
                         )
 
             # x_reg, y_reg, and unravel_reg are assigned in all cases
-            # noinspection PyUnboundLocalVariable
             instructions.extend(_unravel_index(inst, unravel_reg))
-            # noinspection PyUnboundLocalVariable
             instructions.append(
                 CInstruction(
                     inst.line_num,
@@ -325,8 +328,8 @@ def _decompress_destination_section(
     global cur_A
 
     mem_dests: list[Operand] = [d for d in inst.dest if is_M_register(d)]
-    # guaranteed to be only 1 from previous check
-    mem_dest: Operand = mem_dests[0] if len(mem_dests) != 0 else None
+    # guaranteed to be at most 1 from previous check
+    mem_dest: Operand | None = mem_dests[0] if len(mem_dests) != 0 else None
 
     # memory index in dest
     if mem_dest is not None and mem_dest.pointer is not None:
@@ -436,15 +439,15 @@ def _decompress_jmp_destination_section(
 ):
     global cur_A
 
+    # appeasing the type checker
+    assert inst.jmp is not None
+
     # Every decompress step caps the instruction list with a C inst
     # noinspection PyTypeChecker
     prev_inst: CInstruction = instructions[-1]
+    assert prev_inst.jmp is not None
     prev_jmp = prev_inst.jmp
-
-    try:
-        inst.jmp.destination
-    except AttributeError:
-        pass
+    assert prev_jmp.destination is not None
 
     if inst.jmp.destination != cur_A and inst.jmp.destination is not None:
         if inst.jmp.condition != Conditions.TRUE:
@@ -452,6 +455,7 @@ def _decompress_jmp_destination_section(
 
         if len(prev_inst.dest) > 0:
             prev_inst.jmp = None
+
         else:
             del instructions[-1]
 
@@ -661,7 +665,7 @@ def _optimise_C_inst_remove_self_assign(
             if inst.jmp is None:
                 continue
             else:
-                inst.dest = {}
+                inst.dest = set()
 
         optim_instructions.append(inst)
 

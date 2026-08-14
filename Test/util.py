@@ -15,7 +15,7 @@ def make_combination_cases(length: int) -> list[tuple[bool, ...]]:
     return perms
 
 
-def write_lines_to_file(filename: Path | str, lines: list[str]):
+def write_lines_to_file(filename: Path | str, lines: list[BaseInstruction | str]):
     with open(Path.cwd() / "Output" / filename, "w") as f:
         f.writelines([str(line) + "\n" for line in lines])
 

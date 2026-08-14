@@ -59,7 +59,7 @@ class CInstruction(BaseInstruction):
         x: Operand,
         y: Operand | None,
         op: OperationType,
-        dest: set[Operand] = None,
+        dest: set[Operand] | None = None,
         jmp: JumpType | None = None,
     ):
         super().__init__(line_num)
@@ -67,9 +67,9 @@ class CInstruction(BaseInstruction):
         self.x = x
         self.y = y
         self.op = op
-        self.dest = dest
-        if dest is None:
-            self.dest: set[Operand] = set()
+        self.dest: set[Operand] = set()
+        if dest is not None:
+            self.dest: set[Operand] = dest
         self.jmp = jmp
 
     def copy(self):

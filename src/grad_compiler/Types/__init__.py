@@ -30,7 +30,7 @@ class ConditionType:
 @dataclass
 class JumpType:
     condition: ConditionType
-    compared: Operand | None
+    compared: Operand
     destination: str | None
 
     def copy(self):
